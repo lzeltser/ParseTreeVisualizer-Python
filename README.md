@@ -13,8 +13,9 @@ UMass Lowell.
 ## How to Run
 1) Run 
 ```git clone https://github.com/lzeltser/ParseTreeVisualizer-Python```
- in your desired directory.
+in your desired directory.
 2) Install requirements by running ```pip install -r requirements.txt```.
+You may want to create a virtual environment first.
 3) Navigate to the Source folder and run ```python Main.py```.
 
 ## Requirements
@@ -27,6 +28,7 @@ tested on this version and a Windows 10 machine.
 ## Future plans
 This project is a work in progress. The following are features I
 intend to add:
+* Clean up the code
 * Create three parser generators, allowing users to input a grammar for
 a programming language and a tree will be built from it
 * Add functionality to the menu bar
