@@ -14,8 +14,8 @@ UMass Lowell.
 1) Run 
 ```git clone https://github.com/lzeltser/ParseTreeVisualizer-Python```
 in your desired directory.
-2) Install requirements by running ```pip install -r requirements.txt```.
-You may want to create a virtual environment first.
+2) Install requirements by running ```pip install -r requirements.txt```
+in the root folder. You may want to create a virtual environment first.
 3) Navigate to the Source folder and run ```python Main.py```.
 
 ## Requirements
@@ -37,9 +37,10 @@ a programming language and a tree will be built from it
 * Add settings related to displaying the tree
 * Add settings for font size
 * Add a way to zoom in an out from the tree
+* Add more languages for the recursive descent code
 
 ## Contact
-For any questions about the project, you can contact me at
+For any questions about the project, you can email me at
 leonzeltser at gmail dot com.
 
 ## Credits
