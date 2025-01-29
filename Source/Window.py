@@ -23,7 +23,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from GraphicsSettings import GraphicsSettings
 from Grid import Grid
-from Parser import Parser, TableDrivenParser, LLRecursiveDescentParser, LLTableDrivenParser, LRTableDrivenParser
+from Parser import Parser, LLRecursiveDescentParser, LLTableDrivenParser, LRTableDrivenParser
 import HTML
 from Tree import Tree
 from Ui_Window import Ui_MainWindow
@@ -54,8 +54,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         with open("../ExampleCode/Average.cl", "r") as f:
             self.code: str = f.read()
 
-        self.stack_trace_stack_text: str = ''
-        self.stack_trace_token_list: str = ''
+        self.stack_trace_stack_text: list[str] = []
+        self.stack_trace_token_list: list[str] = []
         self.stack_trace_max_stack_text_len: int = 0
         self.stack_trace_max_token_text_len: int = 0
 
@@ -80,7 +80,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.GrammarExportButton.clicked.connect(self.grammar_export_button_pressed)
         self.RunStopButton.clicked.connect(self.run_stop_button_pressed)
         self.StepButton.clicked.connect(self.step_button_pressed)
-        self.ResetButton.clicked.connect(self.reset_parser)
+        self.ResetButton.clicked.connect(self.reset)
         self.ResetButton.setEnabled(False)
         self.AlgorithmBox.activated.connect(self.algorithm_change)
         self.CodeUpdateButton.clicked.connect(self.code_update_button_pressed)
@@ -162,8 +162,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.current_parser = self.parsers[self.AlgorithmBox.currentIndex()]
         with open("../Grammars/Calculator-LL.gr", 'r') as f:  # TODO: add new grammar
             self.current_parser.input_grammar(f.read())
-        self.RDCodeSelectBox.setEnabled(False if isinstance(self.current_parser, TableDrivenParser) else True)
-        self.reset_parser()
+        self.RDCodeSelectBox.setEnabled(True if isinstance(self.current_parser, LLRecursiveDescentParser) else False)
+        self.reset()
 
     def code_update_button_pressed(self) -> None:
         self.update_code(self.CodeEditBox.toPlainText())
@@ -183,7 +183,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             # TODO: raise a dialogue box
             raise e
         else:
-            self.reset_parser()
+            self.reset()
 
     def update_code(self, new_code: str) -> None:
         try:
@@ -193,13 +193,13 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             raise e
         else:
             self.code = new_code
-            self.reset_parser()
+            self.reset()
 
-    def reset_parser(self) -> None:
+    def reset(self) -> None:
         self.current_parser.reset()
         # TODO: add this method to __init__(), remove redundant lines, replace with type hints
-        self.stack_trace_stack_text = ''
-        self.stack_trace_token_list = ''
+        self.stack_trace_stack_text = []
+        self.stack_trace_token_list = []
         self.stack_trace_max_stack_text_len = 0
         self.stack_trace_max_token_text_len = 0
         self.TreeScene.clear()
@@ -209,7 +209,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TreeView.verticalScrollBar().setValue(1)
         # self.grammar.remove_recursive_descent_highlight()
         self.TableBox.setHtml(self.current_parser.make_html())
-        self.stack_trace_stack_text = self.stack_trace_token_list = ''
         self.StackDisplay.setHtml('')
         self.enable_run_buttons()
         self.current_parser.lexer(self.code)
@@ -233,7 +232,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.CodeImportButton.setEnabled(False)
 
     def enable_all_buttons(self) -> None:
-        self.RDCodeSelectBox.setEnabled(False if isinstance(self.current_parser, TableDrivenParser) else True)
+        self.RDCodeSelectBox.setEnabled(True if isinstance(self.current_parser, LLRecursiveDescentParser) else False)
         self.GrammerUpdateButton.setEnabled(True)
         self.GrammarImportButton.setEnabled(True)
         self.StepButton.setEnabled(True)
@@ -256,18 +255,13 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         parse_stack_line: str = self.current_parser.parse_stack_to_str()
         self.stack_trace_max_stack_text_len = max(len(parse_stack_line), self.stack_trace_max_stack_text_len)
-        self.stack_trace_stack_text += (Parser.add_escape_sequence(parse_stack_line) + '<br>')
+        self.stack_trace_stack_text.append(parse_stack_line)
 
         token_stream_line: str = self.current_parser.token_stream_to_str()
         self.stack_trace_max_token_text_len = max(len(token_stream_line), self.stack_trace_max_token_text_len)
-        self.stack_trace_token_list += ('   ' + Parser.add_escape_sequence(token_stream_line) + '<br>')
+        self.stack_trace_token_list.append(token_stream_line)
 
-        self.StackDisplay.setHtml(
-            HTML.stack_trace_beginning_text +
-            self.stack_trace_stack_text[:-4] +
-            HTML.stack_trace_middle_text +
-            self.stack_trace_token_list[:-4] +
-            HTML.stack_trace_end_text)
+        self.StackDisplay.setHtml(HTML.StackTrace.make_html(self.stack_trace_stack_text, self.stack_trace_token_list))
         self.StackDisplay.verticalScrollBar().setValue(self.StackDisplay.verticalScrollBar().maximum())
 
         self.move_scroll_bar(
@@ -308,7 +302,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         return grid
 
     def draw_tree(self, grid: Grid[Tree]) -> None:
-        self.TreeScene.setSceneRect(0, 0,
+        self.TreeScene.setSceneRect(
+            0, 0,
             max(self.TreeScene.width(), self.graphics_settings.canvas_width(grid.width)),
             max(self.TreeScene.height(), self.graphics_settings.canvas_height(grid.height))
         )
@@ -478,8 +473,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                    / max_position * position_to_set - scroll_bar.pageStep()/2) if max_position > 0 else 0
 
     @staticmethod
-    def run() -> None:
-        app = QtWidgets.QApplication([])
-        window = Window()
+    def run(argv: list[str]) -> None:
+        app: QtWidgets.QApplication = QtWidgets.QApplication(argv)
+        window: Window = Window()
         window.show()
         app.exec()

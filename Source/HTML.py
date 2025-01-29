@@ -16,26 +16,57 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-stack_trace_beginning_text: str = r"""<!DOCTYPE HTML>
+
+def add_escape_sequences(text: str) -> str:
+    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+class StackTrace:
+    html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; }
 </style></head><body align="center" style=" font-family:'Segoe UI', sans-serif; font-size:9pt; font-weight:400; font-style:normal;">
 <table border="0" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;" cellspacing="0" cellpadding="0">
 <tr><td><p align="right" style=" color:#00ff00;">"""
-stack_trace_middle_text: str = r"""</span></p></td>
-<td><p align="left">"""
-stack_trace_end_text: str = r"""</p></td></tr></table></body></html>"""
+    html_middle: str = r"""</span></p></td><td><p align="left">   """
+    html_end: str = r"""</p></td></tr></table></body></html>"""
 
-recursive_descent_beginning_text: str = r"""<!DOCTYPE HTML>
+    @staticmethod
+    def make_html(stack_text: list[str], token_text: list[str]) -> str:
+        return (StackTrace.html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
+                StackTrace.html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + StackTrace.html_end)
+
+
+class RDCode:
+    html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; }
 </style></head><body style=" font-family:'Courier New', monospace; font-size:9pt; font-weight:400; font-style:normal;"><p>"""
-recursive_descent_end_text: str = r"""</p></body></html>"""
+    html_end: str = r"""</p></body></html>"""
+    highlight_line_code: str = r"""+==HIGHLIGHT_THIS_LINE=="""
+    highlight_start: str = r"""<highlight style="background-color:red;">"""
+    highlight_end: str = r""" </highlight>"""
 
-recursive_descent_highlight_start: str = r"""<highlight style="background-color:red;">"""
-recursive_descent_highlight_end: str = r""" </highlight>"""
+    @staticmethod
+    def add_escape_sequences(text: str) -> str:
+        return (RDCode.highlight_start + add_escape_sequences(text).removeprefix(RDCode.highlight_line_code) +
+                RDCode.highlight_end) if text.startswith(RDCode.highlight_line_code) else add_escape_sequences(text)
 
-table_beginning_text: str = r"""<!DOCTYPE HTML>
+    @staticmethod
+    def make_html(text: list[str]) -> str:
+        return RDCode.html_start + '<br>'.join(map(RDCode.add_escape_sequences, text)) + RDCode.html_end
+
+    @staticmethod
+    def highlight_line(line: str) -> str:
+        return RDCode.highlight_line_code + line
+
+    @staticmethod
+    def remove_highlight(line: str) -> str:
+        return line.removeprefix(RDCode.highlight_line_code)
+
+
+class Table:
+    html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; }
 .top_row { text-align:center; color:#ff0000; background-color:#dcdcdc; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; position:sticky; top:0; z-index:2; }
@@ -46,16 +77,48 @@ p { white-space: pre-wrap; }
 .cell_highlighted { text-align:center; background-color:#e6e6e6; }
 .cell_double_highlighted { text-align:center; background-color:#aaaaaa; }
 </style></head><body style=" font-family: 'Segoe UI', sans-serif; font-size:9pt; font-weight:400; font-style:normal;"><table border="0" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;" align="center" cellspacing="0" cellpadding="0">"""
-table_row_beginning: str = r"""<tr>"""
-table_cell_start_part1: str = r"""<td class=" """
-cell_style_top_row: str = r"""top_row"""
-cell_style_top_row_hl: str = r"""top_row_highlighted"""
-cell_style_left_col: str = r"""left_col"""
-cell_style_left_col_hl: str = r"""left_col_highlighted"""
-cell_style_normal: str = r"""cell_normal"""
-cell_style_hl: str = r"""cell_highlighted"""
-cell_style_2_hl: str = r"""cell_double_highlighted"""
-table_cell_start_part2: str = r""" "><p align="center">  """
-table_cell_end: str = r"""  </p></td>"""
-table_row_end: str = r"""</tr>"""
-table_end_text: str = r"""</table></body></html>"""
+    html_end: str = r"""</table></body></html>"""
+
+    row_start: str = r"""<tr>"""
+    row_end: str = r"""</tr>"""
+
+    cell_start_1: str = r"""<td class=" """
+    cell_start_2: str = r""" "><p align="center">  """
+    cell_end: str = r"""  </p></td>"""
+
+    cell_style_top_row: str = r"""top_row"""
+    cell_style_top_row_hl: str = r"""top_row_highlighted"""
+    cell_style_left_col: str = r"""left_col"""
+    cell_style_left_col_hl: str = r"""left_col_highlighted"""
+    cell_style_normal: str = r"""cell_normal"""
+    cell_style_hl: str = r"""cell_highlighted"""
+    cell_style_2_hl: str = r"""cell_double_highlighted"""
+
+    @staticmethod
+    def cell_text(style: str, content='') -> str:
+        return (Table.cell_start_1 + style + Table.cell_start_2
+                + add_escape_sequences(str('' if str(content) == '-1' else content)) + Table.cell_end)
+
+    @staticmethod
+    def write_table(left_col: list, top_row: list, table: list[list], hl_row: int = -1, hl_column: int = -1) -> str:
+
+        text: str = Table.html_start + Table.row_start + Table.cell_text(Table.cell_style_normal)
+        for i, item in enumerate(top_row):
+            text += Table.cell_text(Table.cell_style_top_row_hl if i == hl_column else Table.cell_style_top_row, item)
+        text += Table.row_end
+        for r, row in enumerate(table):
+            text += Table.row_start
+            text += Table.cell_text(Table.cell_style_left_col_hl if r == hl_row else Table.cell_style_left_col, left_col[r])
+            for c, cell in enumerate(row):
+                this_style: str
+                if r == hl_row and c == hl_column:
+                    this_style = Table.cell_style_2_hl
+                elif r == hl_row or c == hl_column:
+                    this_style = Table.cell_style_hl
+                else:
+                    this_style = Table.cell_style_normal
+                text += Table.cell_text(this_style, cell)
+            text += Table.row_end
+
+        text += Table.html_end
+        return text

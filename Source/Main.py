@@ -18,11 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
 import traceback
+from types import TracebackType
+from typing import Type
 
 from Window import Window
 
 
-def exception_hook(exc_type, value, tb):
+def exception_hook(exc_type: Type[BaseException], value: BaseException, tb: TracebackType | None) -> None:
     print(exc_type, value, tb)
     traceback.print_exception(exc_type, value, tb)
     sys.exit(1)
@@ -30,4 +32,4 @@ def exception_hook(exc_type, value, tb):
 
 if __name__ == '__main__':
     sys.excepthook = exception_hook
-    Window.run()
+    Window.run(sys.argv)

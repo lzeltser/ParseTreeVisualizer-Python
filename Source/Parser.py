@@ -131,10 +131,6 @@ class Parser:
     def parse_stack_to_str(self) -> str: ...
 
     @staticmethod
-    def add_escape_sequence(string: str) -> str:
-        return string.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-
-    @staticmethod
     def iterable_attributes_to_str(iterable: Iterable, *args: tuple[str, ...] | str, separator: str = ' ') -> str:
         stream = ''
         for item in iterable:
@@ -163,39 +159,6 @@ class TableDrivenParser(Parser):
         super().reset()
         self.highlighted_row = -1
         self.highlighted_col = -1
-
-    @staticmethod
-    def write_table(left_col: list, top_row: list, table: list[list],
-                    highlighted_row: int = -1, highlighted_column: int = -1) -> str:
-        def cell_text(style: str, content='') -> str:
-            if str(content) == '-1':
-                content = ''
-            return (HTML.table_cell_start_part1 + style + HTML.table_cell_start_part2
-                    + TableDrivenParser.add_escape_sequence(str(content)) + HTML.table_cell_end)
-
-        text: str = HTML.table_beginning_text + HTML.table_row_beginning
-        text += cell_text(HTML.cell_style_normal)
-        for i, item in enumerate(top_row):
-            text += cell_text(HTML.cell_style_top_row_hl
-                              if i == highlighted_column else HTML.cell_style_top_row, item)
-        text += HTML.table_row_end
-        for r, row in enumerate(table):
-            text += HTML.table_row_beginning
-            text += cell_text(HTML.cell_style_left_col_hl
-                              if r == highlighted_row else HTML.cell_style_left_col, left_col[r])
-            for c, cell in enumerate(row):
-                this_style: str
-                if r == highlighted_row and c == highlighted_column:
-                    this_style = HTML.cell_style_2_hl
-                elif r == highlighted_row or c == highlighted_column:
-                    this_style = HTML.cell_style_hl
-                else:
-                    this_style = HTML.cell_style_normal
-                text += cell_text(this_style, cell)
-            text += HTML.table_row_end
-
-        text += HTML.table_end_text
-        return text
 
 
 class LLRecursiveDescentParser(Parser):
@@ -335,9 +298,7 @@ class LLRecursiveDescentParser(Parser):
                         self.finished_parsing = True  # stop the parser
 
     def make_html(self) -> str:
-        return (HTML.recursive_descent_beginning_text +
-                '<br>'.join(self.recursive_descent_code) +
-                HTML.recursive_descent_end_text)
+        return HTML.RDCode.make_html(self.recursive_descent_code)
 
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
@@ -401,29 +362,20 @@ class LLRecursiveDescentParser(Parser):
 
         if language.program_last_statements != '':
             self.recursive_descent_code += language.program_last_statements.split('\n')
-        self.recursive_descent_code = [self.add_escape_sequence(line) for line in self.recursive_descent_code]
 
         self.vertical_scroll_bar_max_pos = len(self.recursive_descent_code) - 1
 
     def highlight_recursive_descent_line(self, rule: RDRule) -> None:
-        if rule is not None:
-            self.remove_recursive_descent_highlight()
-            line: int = rule.code_line
-            self.recursive_descent_code[line] = \
-                HTML.recursive_descent_highlight_start + self.recursive_descent_code[line] + \
-                HTML.recursive_descent_highlight_end
-            self.highlighted_rule = rule
-            self.vertical_scroll_bar_current_pos = line
+        self.remove_recursive_descent_highlight()
+        self.recursive_descent_code[rule.code_line] = (
+            HTML.RDCode.highlight_line(self.recursive_descent_code[rule.code_line]))
+        self.highlighted_rule = rule
+        self.vertical_scroll_bar_current_pos = rule.code_line
 
     def remove_recursive_descent_highlight(self) -> None:
         if self.highlighted_rule is not None:
-            highlighted_code_line: int = self.highlighted_rule.code_line
-            self.recursive_descent_code[highlighted_code_line] = \
-                self.recursive_descent_code[highlighted_code_line].removeprefix(
-                HTML.recursive_descent_highlight_start)
-            self.recursive_descent_code[highlighted_code_line] = \
-                self.recursive_descent_code[highlighted_code_line].removesuffix(
-                HTML.recursive_descent_highlight_end)
+            self.recursive_descent_code[self.highlighted_rule.code_line] = (
+                HTML.RDCode.remove_highlight(self.recursive_descent_code[self.highlighted_rule.code_line]))
             self.highlighted_rule = None
 
     def update_recursive_descent_code(self, index: int) -> None:
@@ -536,7 +488,7 @@ class LLTableDrivenParser(TableDrivenParser):
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
 
     def make_html(self) -> str:
-        return self.write_table(
+        return HTML.Table.write_table(
             self.ll_rule_list, self.ll_token_list, self.ll_table, self.highlighted_row, self.highlighted_col)
 
     def parse_stack_to_str(self) -> str:
@@ -680,8 +632,8 @@ class LRTableDrivenParser(TableDrivenParser):
                     self.finished_parsing = True
 
     def make_html(self) -> str:
-        return self.write_table(list(range(len(self.lr_production_list))), self.lr_symbol_list,
-                                self.lr_table, self.highlighted_row, self.highlighted_col)
+        return HTML.Table.write_table(list(range(len(self.lr_production_list))), self.lr_symbol_list,
+                                      self.lr_table, self.highlighted_row, self.highlighted_col)
 
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"), "state")
