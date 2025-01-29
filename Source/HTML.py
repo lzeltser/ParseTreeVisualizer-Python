@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import Any
+
 
 def add_escape_sequences(text: str) -> str:
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -95,29 +97,35 @@ p { white-space: pre-wrap; }
     cell_style_2_hl: str = r"""cell_double_highlighted"""
 
     @staticmethod
-    def cell_text(style: str, content='') -> str:
+    def write_cell(style: str, content: Any = '') -> str:
         return (Table.cell_start_1 + style + Table.cell_start_2
                 + add_escape_sequences(str('' if str(content) == '-1' else content)) + Table.cell_end)
 
     @staticmethod
-    def write_table(left_col: list, top_row: list, table: list[list], hl_row: int = -1, hl_column: int = -1) -> str:
-
-        text: str = Table.html_start + Table.row_start + Table.cell_text(Table.cell_style_normal)
-        for i, item in enumerate(top_row):
-            text += Table.cell_text(Table.cell_style_top_row_hl if i == hl_column else Table.cell_style_top_row, item)
+    def write_row(first_style: str, main_style: str, hl_style: str, first_item: Any, other_items: list, hl_col: int) -> str:
+        text: str = Table.row_start
+        text += Table.write_cell(first_style, first_item)
+        for i, item in enumerate(other_items):
+            text += Table.write_cell(hl_style if i == hl_col else main_style, item)
         text += Table.row_end
+        return text
+
+    @staticmethod
+    def write_table(left_col: list, top_row: list, table: list[list], hl_row: int = -1, hl_col: int = -1) -> str:
+        text: str = Table.html_start
+        text += Table.write_row(Table.cell_style_normal, Table.cell_style_top_row, Table.cell_style_top_row_hl, '', top_row, hl_col)
         for r, row in enumerate(table):
             text += Table.row_start
-            text += Table.cell_text(Table.cell_style_left_col_hl if r == hl_row else Table.cell_style_left_col, left_col[r])
+            text += Table.write_cell(Table.cell_style_left_col_hl if r == hl_row else Table.cell_style_left_col, left_col[r])
             for c, cell in enumerate(row):
                 this_style: str
-                if r == hl_row and c == hl_column:
+                if r == hl_row and c == hl_col:
                     this_style = Table.cell_style_2_hl
-                elif r == hl_row or c == hl_column:
+                elif r == hl_row or c == hl_col:
                     this_style = Table.cell_style_hl
                 else:
                     this_style = Table.cell_style_normal
-                text += Table.cell_text(this_style, cell)
+                text += Table.write_cell(this_style, cell)
             text += Table.row_end
 
         text += Table.html_end
