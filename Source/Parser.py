@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from __future__ import annotations
-from typing import Iterable
+from collections.abc import Iterable
 
 from Grammar import Grammar
 import HTML
@@ -189,6 +189,7 @@ class LLRecursiveDescentParser(Parser):
         self.highlighted_rule = None
         self.recursive_descent_rules = {}
         self.start_rule = self.RDRule('', True)
+        self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
         super().__init__()
 
     def generate_rules(self) -> None:
@@ -308,7 +309,7 @@ class LLRecursiveDescentParser(Parser):
         self.remove_recursive_descent_highlight()
 
     def make_recursive_descent_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
-        language: RDCodeRules.RDCodeRules = RDCodeRules.RecursiveDescentCodeLanguages[language_index]
+        language: RDCodeRules.RDCodeRules = self.languages[language_index]
         rule_counter: int = 1
         self.recursive_descent_code = []
 
@@ -380,7 +381,8 @@ class LLRecursiveDescentParser(Parser):
 
     def update_recursive_descent_code(self, index: int) -> None:
         self.make_recursive_descent_code(index)
-        self.highlight_recursive_descent_line(self.highlighted_rule)
+        if self.highlighted_rule is not None:
+            self.highlight_recursive_descent_line(self.highlighted_rule)
 
 
 class LLTableDrivenParser(TableDrivenParser):
