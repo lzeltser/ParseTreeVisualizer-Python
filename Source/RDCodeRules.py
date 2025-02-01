@@ -20,7 +20,9 @@ INDENT: str = ' ' * 4
 
 
 class RDCodeRules:
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+
         self.program_first_statements: str = ''  # things like include statements in C go here
 
         self.declare_functions: bool = False
@@ -55,7 +57,7 @@ class RDCodeRules:
         self.program_last_statements: str = ''
 
 
-Pseudocode = RDCodeRules()
+Pseudocode = RDCodeRules('Pseudocode')
 Pseudocode.first_code = f"""procedure match(expected)
 {INDENT}if input_token = expected then consume_input_token()
 {INDENT}else parse_error
@@ -82,7 +84,7 @@ Pseudocode.skip_case = 3 * INDENT + 'skip  /* epsilon production */'
 Pseudocode.switch_default = INDENT + 'otherwise parse_error'
 Pseudocode.function_last_line = '\n'
 
-C = RDCodeRules()
+C = RDCodeRules('C')
 C.program_first_statements = """#include <stdlib.h>
 
 void match(token);
@@ -125,7 +127,7 @@ C.switch_default = INDENT + f'default:\n{2 * INDENT}error();\n{2 * INDENT}break;
 C.function_last_line = '\n'
 C.program_last_statements = ''
 
-Python = RDCodeRules()
+Python = RDCodeRules('Python')
 Python.first_code = f"""def match_(expected):
 {INDENT}if input_token == expected:
 {INDENT * 2} consume(input_token)
