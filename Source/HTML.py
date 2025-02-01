@@ -16,8 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Any
-
 
 def add_escape_sequences(text: str) -> str:
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -39,7 +37,7 @@ p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; m
                 StackTrace.html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + StackTrace.html_end)
 
 
-class RDCode:
+class Code:
     html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; }
@@ -51,16 +49,16 @@ p { white-space: pre-wrap; }
 
     @staticmethod
     def add_escape_sequences(text: str) -> str:
-        return (RDCode.highlight_start + add_escape_sequences(text).removeprefix(RDCode.highlight_line_code) +
-                RDCode.highlight_end) if text.startswith(RDCode.highlight_line_code) else add_escape_sequences(text)
+        return (Code.highlight_start + add_escape_sequences(text).removeprefix(Code.highlight_line_code) +
+                Code.highlight_end) if text.startswith(Code.highlight_line_code) else add_escape_sequences(text)
 
     @staticmethod
     def make_html(text: list[str]) -> str:
-        return RDCode.html_start + '<br>'.join(map(RDCode.add_escape_sequences, text)) + RDCode.html_end
+        return Code.html_start + '<br>'.join(map(Code.add_escape_sequences, text)) + Code.html_end
 
     @staticmethod
     def highlight_line(line: str) -> str:
-        return RDCode.highlight_line_code + line
+        return Code.highlight_line_code + line
 
     @staticmethod
     def remove_highlight(line: str) -> str:
