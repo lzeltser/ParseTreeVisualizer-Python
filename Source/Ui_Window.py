@@ -42,44 +42,55 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.LeftScreen.sizePolicy().hasHeightForWidth())
         self.LeftScreen.setSizePolicy(sizePolicy)
         self.LeftScreen.setObjectName("LeftScreen")
-        self.TableTab = QtWidgets.QWidget()
-        self.TableTab.setObjectName("TableTab")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.TableTab)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.TableBox = QtWidgets.QTextBrowser(parent=self.TableTab)
-        self.TableBox.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.NoWrap)
-        self.TableBox.setObjectName("TableBox")
-        self.verticalLayout_5.addWidget(self.TableBox)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.RDCodeLabel = QtWidgets.QLabel(parent=self.TableTab)
+        self.CodeAndTableTab = QtWidgets.QWidget()
+        self.CodeAndTableTab.setObjectName("CodeAndTableTab")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.CodeAndTableTab)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.TableTabSplitter = QtWidgets.QSplitter(parent=self.CodeAndTableTab)
+        self.TableTabSplitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.TableTabSplitter.setObjectName("TableTabSplitter")
+        self.layoutWidget = QtWidgets.QWidget(parent=self.TableTabSplitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.CodeBoxLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
+        self.CodeBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.CodeBoxLayout.setObjectName("CodeBoxLayout")
+        self.CodeBox = QtWidgets.QTextBrowser(parent=self.layoutWidget)
+        self.CodeBox.setObjectName("CodeBox")
+        self.CodeBoxLayout.addWidget(self.CodeBox)
+        self.CodeBoxBottom = QtWidgets.QHBoxLayout()
+        self.CodeBoxBottom.setObjectName("CodeBoxBottom")
+        self.RDCodeLabel = QtWidgets.QLabel(parent=self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.RDCodeLabel.sizePolicy().hasHeightForWidth())
         self.RDCodeLabel.setSizePolicy(sizePolicy)
         self.RDCodeLabel.setObjectName("RDCodeLabel")
-        self.horizontalLayout_2.addWidget(self.RDCodeLabel)
-        self.RDCodeSelectBox = QtWidgets.QComboBox(parent=self.TableTab)
+        self.CodeBoxBottom.addWidget(self.RDCodeLabel)
+        self.RDCodeSelectBox = QtWidgets.QComboBox(parent=self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.RDCodeSelectBox.sizePolicy().hasHeightForWidth())
         self.RDCodeSelectBox.setSizePolicy(sizePolicy)
         self.RDCodeSelectBox.setObjectName("RDCodeSelectBox")
-        self.RDCodeSelectBox.addItem("")
-        self.RDCodeSelectBox.addItem("")
-        self.RDCodeSelectBox.addItem("")
-        self.horizontalLayout_2.addWidget(self.RDCodeSelectBox)
+        self.CodeBoxBottom.addWidget(self.RDCodeSelectBox)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem)
-        self.verticalLayout_5.addLayout(self.horizontalLayout_2)
-        self.LeftScreen.addTab(self.TableTab, "")
+        self.CodeBoxBottom.addItem(spacerItem)
+        self.CodeBoxLayout.addLayout(self.CodeBoxBottom)
+        self.TableBox = QtWidgets.QTableWidget(parent=self.TableTabSplitter)
+        self.TableBox.setObjectName("TableBox")
+        self.TableBox.setColumnCount(0)
+        self.TableBox.setRowCount(0)
+        self.verticalLayout_4.addWidget(self.TableTabSplitter)
+        self.LeftScreen.addTab(self.CodeAndTableTab, "")
         self.GrammarTab = QtWidgets.QWidget()
         self.GrammarTab.setObjectName("GrammarTab")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.GrammarTab)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.GrammarEditBox = QtWidgets.QPlainTextEdit(parent=self.GrammarTab)
+        self.GrammarEditBox.setStyleSheet("font: 9pt \"Courier New\", monospace;")
+        self.GrammarEditBox.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
         self.GrammarEditBox.setObjectName("GrammarEditBox")
         self.verticalLayout_6.addWidget(self.GrammarEditBox)
         self.GrammarTabBottom = QtWidgets.QHBoxLayout()
@@ -305,10 +316,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Parse Tree Visualizer"))
         self.RDCodeLabel.setText(_translate("MainWindow", "Code Language (recursive descent only):"))
-        self.RDCodeSelectBox.setItemText(0, _translate("MainWindow", "Pseudocode"))
-        self.RDCodeSelectBox.setItemText(1, _translate("MainWindow", "C"))
-        self.RDCodeSelectBox.setItemText(2, _translate("MainWindow", "Python"))
-        self.LeftScreen.setTabText(self.LeftScreen.indexOf(self.TableTab), _translate("MainWindow", "Table/Code"))
+        self.LeftScreen.setTabText(self.LeftScreen.indexOf(self.CodeAndTableTab), _translate("MainWindow", "Code and Table"))
         self.GrammerUpdateButton.setText(_translate("MainWindow", "Update"))
         self.GrammarImportButton.setText(_translate("MainWindow", "Import..."))
         self.GrammarExportButton.setText(_translate("MainWindow", "Export..."))
@@ -320,13 +328,19 @@ class Ui_MainWindow(object):
 "li.unchecked::marker { content: \"\\2610\"; }\n"
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:\'Segoe UI\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt; text-decoration: underline;\">Writing a grammar for Parse Tree Visualizer</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt; text-decoration: underline;\">THIS FEATURE HAS NOT YET BEEN IMPLEMENTED</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt; text-decoration: underline;\"><br />Writing a grammar for Parse Tree Visualizer</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Grammar can be written in Backus-Naur form using the following format:<br />&lt;symbol&gt; ::= expression1 | expression 2</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Expressions are made up of any number of other rules (enclosed in triangle brackets) or other symbols (enclosed in double quotes). Each symbol can have multiple rules, each one seperated by a |. Anything following a semicolon up to the end of the line is a comment. For example, in the following rule:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Rules are made up of any number of other rules (enclosed in triangle brackets) or other symbols (enclosed in double quotes). Each rule can have multiple productions, each one seperated by a |. Rule names can only contain letters, numbers, underscores (_), and hyphens (-), while symbols can have any character (escape sequences are below). Anything following a semicolon up to the end of the line is a comment. For example, in the following rule:</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">&lt;ex&gt; ::= &quot;(&quot; &lt;r1&gt; &quot;)&quot; | &lt;r2&gt; &quot;+&quot; &lt;r3&gt; | &lt;r4&gt; ;comment</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The rule ex mean could mean &lt;r1&gt; inside parentheses, &lt;r2&gt; followed by a + followed by &lt;r3&gt;, or &lt;r4&gt; alone. The word &quot;comment&quot; will not be parsed.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The rule &lt;ex&gt; mean could mean &lt;r1&gt; inside parentheses, &lt;r2&gt; followed by a + followed by &lt;r3&gt;, or &lt;r4&gt; alone. The word &quot;comment&quot; will not be parsed.</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Escape sequences:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">\\n - newline</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">\\&quot; - </p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">\\\\ - single backslash</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Special rules and symbols:</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">&quot;&quot; - empty string/epsilon</p>\n"
