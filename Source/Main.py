@@ -25,7 +25,6 @@ from Window import Window
 
 
 def exception_hook(exc_type: Type[BaseException], value: BaseException, tb: TracebackType | None) -> None:
-    print(exc_type, value, tb)
     traceback.print_exception(exc_type, value, tb)
     sys.exit(1)
 
