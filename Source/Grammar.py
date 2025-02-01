@@ -190,5 +190,5 @@ class Grammar:
 
     def make_list(self) -> list[str]:
         def make_str(n: int, rule: Grammar.Rule) -> str:
-            return str(n).rjust(len(self.rules) // 10 + 1) + '. ' + rule.make_formatted_str(self.longest_rule_len)
+            return str(n).rjust(len(str(len(self.rules)))) + '. ' + rule.make_formatted_str(self.longest_rule_len)
         return [make_str(i, r) for i, r, in enumerate(self.rules, start=1)]
