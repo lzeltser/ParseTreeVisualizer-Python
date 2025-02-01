@@ -61,7 +61,11 @@
             <widget class="QWidget" name="layoutWidget">
              <layout class="QVBoxLayout" name="CodeBoxLayout">
               <item>
-               <widget class="QTextBrowser" name="CodeBox"/>
+               <widget class="QTextBrowser" name="CodeBox">
+                <property name="lineWrapMode">
+                 <enum>QTextEdit::LineWrapMode::NoWrap</enum>
+                </property>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="CodeBoxBottom">
@@ -384,7 +388,11 @@ li.checked::marker { content: &quot;\2612&quot;; }
           <item>
            <layout class="QVBoxLayout" name="CodeTabLayout">
             <item>
-             <widget class="QPlainTextEdit" name="CodeEditBox"/>
+             <widget class="QPlainTextEdit" name="CodeEditBox">
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::LineWrapMode::NoWrap</enum>
+              </property>
+             </widget>
             </item>
             <item>
              <layout class="QHBoxLayout" name="CodeTabBottom">
