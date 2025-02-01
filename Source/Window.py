@@ -50,8 +50,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         super(Window, self).__init__()
         self.setupUi(self)
 
-
-
         self.stack_trace_stack_text: list[str] = []
         self.stack_trace_token_list: list[str] = []
         self.stack_trace_max_stack_text_len: int = 0
