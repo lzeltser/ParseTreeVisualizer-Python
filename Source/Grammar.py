@@ -33,8 +33,8 @@ class Grammar:
             self.name: str = name
             self.rules: list[Grammar.Item] = [] if rules is None else rules
 
-        def __str__(self) -> str:
-            return self.name + ' ::= ' + ' '.join(map(str, self.rules))
+        def make_formatted_str(self, longest_rule_len: int) -> str:
+            return '<' + self.name + '>' + ' ' * (longest_rule_len - len(self.name)) + ' ::= ' + ' '.join(map(str, self.rules))
 
     class GrammarParsingError(Exception):
         pass
@@ -183,3 +183,12 @@ class Grammar:
         self.tokens_list = list(set(self.tokens_list))
         if '' in self.tokens_list:
             self.tokens_list.remove('')
+
+    @property
+    def longest_rule_len(self) -> int:
+        return max(map(lambda x: len(x.name), self.rules))
+
+    def make_list(self) -> list[str]:
+        def make_str(n: int, rule: Grammar.Rule) -> str:
+            return str(n).rjust(len(self.rules) // 10 + 1) + '. ' + rule.make_formatted_str(self.longest_rule_len)
+        return [make_str(i, r) for i, r, in enumerate(self.rules, start=1)]
