@@ -23,7 +23,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from GraphicsSettings import GraphicsSettings
 from Grid import Grid
-from Parser import Parser, LLRecursiveDescentParser, LLTableDrivenParser, LRTableDrivenParser
+from Parser import Parser, TableDrivenParser, LLRecursiveDescentParser, LLTableDrivenParser, LRTableDrivenParser
 import HTML
 from Tree import Tree
 from Ui_Window import Ui_MainWindow
@@ -50,9 +50,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         super(Window, self).__init__()
         self.setupUi(self)
 
-        # Initialize grammar, code, and other class variables
-        with open("../ExampleCode/Average.cl", "r") as f:
-            self.code: str = f.read()
+
 
         self.stack_trace_stack_text: list[str] = []
         self.stack_trace_token_list: list[str] = []
@@ -63,15 +61,29 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.thread_pool: QtCore.QThreadPool = QtCore.QThreadPool()
 
         self.parsers: list[Parser] = [LLRecursiveDescentParser(), LLTableDrivenParser(), LRTableDrivenParser()]
-        self.current_parser: Parser = self.parsers[self.AlgorithmBox.currentIndex()]
         with open("../Grammars/Calculator-LL.gr", 'r') as f:
-            self.current_parser.input_grammar(f.read())
+            self.parsers[0].input_grammar(f.read())
+        with open("../Grammars/Calculator-LL.gr", 'r') as f:
+            self.parsers[1].input_grammar(f.read())
+        with open("../Grammars/Calculator-LR.gr", 'r') as f:
+            self.parsers[2].input_grammar(f.read())
+        for language in self.parsers[0].languages:
+            self.RDCodeSelectBox.addItem(language.name)
+        # TODO: figure out how to ignore above warning
+
+        # TODO: let users get a new grammar
+
+        # Initialize grammar, code, and other class variables
+        with open("../ExampleCode/Average.cl", "r") as f:
+            self.code: str = f.read()
+        self.current_parser: Parser = self.parsers[self.AlgorithmBox.currentIndex()]
         self.current_parser.lexer(self.code)
 
         # Set up GUI stuff
         self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
-        self.TableBox.setHtml(self.current_parser.make_html())
+        self.CodeBox.setHtml(self.current_parser.make_html())
         self.CodeEditBox.setPlainText(self.code)
+        self.TableBox.hide()
 
         # Connect buttons to methods
         self.RDCodeSelectBox.activated.connect(self.recursive_descent_code_changed)
@@ -160,9 +172,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def algorithm_change(self) -> None:
         self.current_parser = self.parsers[self.AlgorithmBox.currentIndex()]
-        with open("../Grammars/Calculator-LL.gr", 'r') as f:  # TODO: add new grammar
-            self.current_parser.input_grammar(f.read())
-        self.RDCodeSelectBox.setEnabled(True if isinstance(self.current_parser, LLRecursiveDescentParser) else False)
+        self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
+        self.RDCodeSelectBox.setEnabled(not self.using_table_driven_parser())
+        self.TableBox.setHidden(not self.using_table_driven_parser())
         self.reset()
 
     def code_update_button_pressed(self) -> None:
@@ -176,10 +188,13 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # TODO put code in file
         pass
 
+    def using_table_driven_parser(self) -> bool:
+        return isinstance(self.current_parser, TableDrivenParser)
+
     def update_grammar(self, new_grammar: str) -> None:
         try:
             self.current_parser.input_grammar(new_grammar)
-        except self.current_parser.grammar.GrammarProcessingException as e:
+        except self.current_parser.grammar.GrammarParsingError as e:
             # TODO: raise a dialogue box
             raise e
         else:
@@ -208,7 +223,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TreeView.horizontalScrollBar().setValue(1)
         self.TreeView.verticalScrollBar().setValue(1)
         # self.grammar.remove_recursive_descent_highlight()
-        self.TableBox.setHtml(self.current_parser.make_html())
+        self.CodeBox.setHtml(self.current_parser.make_html())
         self.StackDisplay.setHtml('')
         self.enable_run_buttons()
         self.current_parser.lexer(self.code)
@@ -232,7 +247,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.CodeImportButton.setEnabled(False)
 
     def enable_all_buttons(self) -> None:
-        self.RDCodeSelectBox.setEnabled(True if isinstance(self.current_parser, LLRecursiveDescentParser) else False)
+        self.RDCodeSelectBox.setEnabled(not self.using_table_driven_parser())
         self.GrammerUpdateButton.setEnabled(True)
         self.GrammarImportButton.setEnabled(True)
         self.StepButton.setEnabled(True)
@@ -275,14 +290,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TreeView.update()
 
     def update_table_display(self) -> None:
-        self.TableBox.setHtml(self.current_parser.make_html())
+        self.CodeBox.setHtml(self.current_parser.make_html())
         self.move_scroll_bar(
-            self.TableBox.horizontalScrollBar(),
+            self.CodeBox.horizontalScrollBar(),
             self.current_parser.horizontal_scroll_bar_current_pos,
             self.current_parser.horizontal_scroll_bar_max_pos
         )
         self.move_scroll_bar(
-            self.TableBox.verticalScrollBar(),
+            self.CodeBox.verticalScrollBar(),
             self.current_parser.vertical_scroll_bar_current_pos,
             self.current_parser.vertical_scroll_bar_max_pos
         )
