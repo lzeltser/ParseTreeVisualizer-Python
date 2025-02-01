@@ -1,12 +1,12 @@
-<program> ::= <stmt_list> <eof>
+<program>   ::= <stmt_list> <eof>
 <stmt_list> ::= <stmt> <stmt_list> | ""
-<stmt> ::= <id> ":=" <expr> | "read" <id> | "write" <expr> | "if" <cond> <stmt_list> "end" | "while" <cond> <stmt_list> "end"
-<cond> ::= <expr> <ro> <expr>
-<expr> ::= <term> <term_tail>
+<stmt>      ::= <id> ":=" <expr> | "read" <id> | "write" <expr> | "if" <cond> <stmt_list> "end" | "while" <cond> <stmt_list> "end"
+<cond>      ::= <expr> <ro> <expr>
+<expr>      ::= <term> <term_tail>
 <term_tail> ::= <ao> <term> <term_tail> | ""
-<term> ::= <factor> <fact_tail>
+<term>      ::= <factor> <fact_tail>
 <fact_tail> ::= <mo> <factor> <fact_tail> | ""
-<factor> ::= "(" <expr> ")" | <id> | <i_lit>
-<ro> ::= "=" | "<>" | "<" | ">" | "<=" | ">="
-<ao> ::= "+" | "-"
-<mo> ::= "*" | "/"
+<factor>    ::= "(" <expr> ")" | <id> | <i_lit>
+<ro>        ::= "=" | "<>" | "<" | ">" | "<=" | ">="
+<ao>        ::= "+" | "-"
+<mo>        ::= "*" | "/"
