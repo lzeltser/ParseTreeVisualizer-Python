@@ -109,7 +109,20 @@
               </item>
              </layout>
             </widget>
-            <widget class="QTableWidget" name="TableBox"/>
+            <widget class="QTableWidget" name="TableBox">
+             <property name="editTriggers">
+              <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+             <property name="cornerButtonEnabled">
+              <bool>false</bool>
+             </property>
+            </widget>
            </widget>
           </item>
          </layout>
