@@ -24,6 +24,8 @@ tested on this version and a Windows 10 machine.
 
 ## Known bugs
 * The parse tree is not placed on the grid properly when drawn
+* Highlighted line is not removed on reset from the grammar on
+table driven algorithms
 
 ## Future plans
 This project is a work in progress. The following are features I

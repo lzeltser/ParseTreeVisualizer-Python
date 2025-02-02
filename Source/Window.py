@@ -534,6 +534,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     @staticmethod
     def run(argv: list[str]) -> None:
         app: QtWidgets.QApplication = QtWidgets.QApplication(argv)
+        app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
         window: Window = Window()
         window.show()
         app.exec()

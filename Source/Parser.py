@@ -174,12 +174,12 @@ class TableDrivenParser(Parser):
 
     def highlight_line(self, line: int) -> None:
         self.remove_highlight()
-        HTML.Code.highlight_line(self.code[line])
+        self.code[line] = HTML.Code.highlight_line(self.code[line])
         self.last_highlighted_line = line
 
     def remove_highlight(self) -> None:
         if 0 <= self.last_highlighted_line < len(self.code):
-            HTML.Code.remove_highlight(self.code[self.last_highlighted_line])
+            self.code[self.last_highlighted_line] = HTML.Code.remove_highlight(self.code[self.last_highlighted_line])
 
 
 class LLRecursiveDescentParser(Parser):
@@ -272,6 +272,7 @@ class LLRecursiveDescentParser(Parser):
         self.make_code()
 
     def step(self) -> None:
+        self.remove_highlight()
         if len(self.parse_stack) < 1:
             if self.current_node is None:
                 # empty stack: start recursive descent
@@ -294,7 +295,6 @@ class LLRecursiveDescentParser(Parser):
             else:
                 if self.parse_stack[-1].index >= len(current_rule):
                     # made it to the end of rules list, exit function
-                    self.remove_highlight()
                     self.current_node = self.parse_stack[-1].node
                     self.parse_stack.pop()
                     if len(self.parse_stack) > 0:
@@ -487,6 +487,7 @@ class LLTableDrivenParser(TableDrivenParser):
         ]
 
     def step(self) -> None:
+        self.remove_highlight()
         if len(self.parse_stack) < 1:
             if self.current_node is None:  # empty stack: push start symbol
                 self.tree = self.current_node = Tree(self.ll_table_rules[0][0].item)
@@ -515,6 +516,7 @@ class LLTableDrivenParser(TableDrivenParser):
                     self.finished_parsing = True
                 else:  # rule exists
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
+                    self.highlight_line(rule_index-1)
 
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
@@ -623,6 +625,7 @@ class LRTableDrivenParser(TableDrivenParser):
         ]
 
     def step(self) -> None:
+        self.remove_highlight()
         if len(self.parse_stack) < 1:
             self.tree = self.current_node = Tree("")
             self.parse_stack.append(self.LRStackFrame(self.tree, "", 0))
@@ -632,8 +635,8 @@ class LRTableDrivenParser(TableDrivenParser):
             self.finished_parsing = True
         else:
             current_symbol: str = self.token_stream[0].name
-            self.curr_highlighted_row = self.parse_stack[-1].state
-            self.curr_highlighted_col = self.lr_symbol_list.index(current_symbol)
+            self.curr_highlighted_row = self.last_highlighted_row = self.parse_stack[-1].state
+            self.curr_highlighted_col = self.last_highlighted_col = self.lr_symbol_list.index(current_symbol)
             rule = self.table[self.curr_highlighted_row][self.curr_highlighted_col]
             match rule.action:
                 case 's':  # shift
@@ -642,6 +645,7 @@ class LRTableDrivenParser(TableDrivenParser):
                     self.tree_is_first_in_token_stream = False
                     self.parse_stack.append(self.LRStackFrame(self.current_node, current_symbol, rule.target))
                 case 'r':  # reduce
+                    self.highlight_line(rule.target-1)
                     production = self.lr_production_list[rule.target]
                     self.token_stream.insert(0, self.Token(production.left_side))
                     self.tree_is_first_in_token_stream = True
@@ -651,6 +655,7 @@ class LRTableDrivenParser(TableDrivenParser):
                         popped_nodes.insert(0, self.tree.remove_last_child())
                     self.current_node = self.tree.add_child(production.left_side, children_list=popped_nodes)
                 case 'b':  # shift then reduce
+                    self.highlight_line(rule.target-1)
                     self.token_stream.pop(0)
                     production = self.lr_production_list[rule.target]
                     self.token_stream.insert(0, self.Token(production.left_side))

@@ -152,6 +152,12 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Update</string>
               </property>
@@ -181,6 +187,12 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Import...</string>
               </property>
@@ -193,6 +205,12 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
               </property>
               <property name="text">
                <string>Export...</string>
@@ -304,6 +322,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Run</string>
               </property>
@@ -317,6 +341,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Step</string>
               </property>
@@ -329,6 +359,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>0</height>
+               </size>
               </property>
               <property name="text">
                <string>Reset</string>
@@ -344,7 +380,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Algorithm:</string>
+               <string> Algorithm:</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -417,6 +453,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>Update</string>
                 </property>
@@ -446,6 +488,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>Import...</string>
                 </property>
@@ -458,6 +506,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>0</height>
+                 </size>
                 </property>
                 <property name="text">
                  <string>Export...</string>
