@@ -32,10 +32,8 @@ class Parser:
     parse_stack: list[ParseStackFrame]
     token_stream: list[Token]
     finished_parsing: bool
-    horizontal_scroll_bar_current_pos: int
-    horizontal_scroll_bar_max_pos: int
-    vertical_scroll_bar_current_pos: int
-    vertical_scroll_bar_max_pos: int
+    code: list[str]
+    last_highlighted_line: int
 
     class Token:
         def __init__(self, name: str, image: str = None) -> None:
@@ -51,8 +49,7 @@ class Parser:
 
     def __init__(self) -> None:
         self.grammar = None
-        self.horizontal_scroll_bar_max_pos = 0
-        self.vertical_scroll_bar_max_pos = 0
+        self.code = []
         self.reset()
 
     def input_grammar(self, description: str) -> None:
@@ -116,8 +113,7 @@ class Parser:
         self.parse_stack = []
         self.token_stream = []
         self.finished_parsing = False
-        self.horizontal_scroll_bar_current_pos = 0
-        self.vertical_scroll_bar_current_pos = 0
+        self.last_highlighted_line = -1
 
     def node_on_stack(self, node: Tree) -> bool:
         for item in self.parse_stack:
@@ -125,9 +121,11 @@ class Parser:
                 return True
         return False
 
+    def make_html(self) -> str:
+        return HTML.Code.make_html(self.code)
+
     def generate_rules(self) -> None: ...
     def step(self) -> None: ...
-    def make_html(self) -> str: ...
     def parse_stack_to_str(self) -> str: ...
 
     @staticmethod
@@ -152,13 +150,36 @@ class Parser:
 class TableDrivenParser(Parser):
     def __init__(self) -> None:
         super().__init__()
-        self.highlighted_row: int = -1
-        self.highlighted_col: int = -1
+        self.curr_highlighted_row: int = -1
+        self.curr_highlighted_col: int = -1
+        self.last_highlighted_row: int = -1
+        self.last_highlighted_col: int = -1
+
+    def table_height(self) -> int: ...
+    def table_width(self) -> int: ...
+    def table_top_row(self) -> Iterable[str]: ...
+    def table_left_col(self) -> Iterable[str]: ...
+    def get_table(self) -> Iterable[Iterable[str]]: ...
 
     def reset(self) -> None:
         super().reset()
-        self.highlighted_row = -1
-        self.highlighted_col = -1
+        self.curr_highlighted_row = -1
+        self.curr_highlighted_col = -1
+        self.last_highlighted_row = -1
+        self.last_highlighted_col = -1
+
+    def input_grammar(self, description: str) -> None:
+        super().input_grammar(description)
+        self.code = self.grammar.make_list()
+
+    def highlight_line(self, line: int) -> None:
+        self.remove_highlight()
+        HTML.Code.highlight_line(self.code[line])
+        self.last_highlighted_line = line
+
+    def remove_highlight(self) -> None:
+        if 0 <= self.last_highlighted_line < len(self.code):
+            HTML.Code.remove_highlight(self.code[self.last_highlighted_line])
 
 
 class LLRecursiveDescentParser(Parser):
@@ -184,7 +205,6 @@ class LLRecursiveDescentParser(Parser):
 
     def __init__(self) -> None:
         self.starting_rule: str = ''
-        self.recursive_descent_code: list[str] = []
 
         self.highlighted_rule = None
         self.recursive_descent_rules = {}
@@ -249,14 +269,14 @@ class LLRecursiveDescentParser(Parser):
             '*': [self.RDRule('*', False)], '/': [self.RDRule('/', False)]}
 
         self.recursive_descent_rules = new_recursive_descent_rules
-        self.make_recursive_descent_code()
+        self.make_code()
 
     def step(self) -> None:
         if len(self.parse_stack) < 1:
             if self.current_node is None:
                 # empty stack: start recursive descent
                 self.tree = self.current_node = Tree(self.starting_rule)
-                self.highlight_recursive_descent_line(self.start_rule)
+                self.highlight_line(self.start_rule)
                 self.parse_stack.append(
                     self.RDStackFrame(self.tree, self.starting_rule, self.token_stream[0].name))
             else:
@@ -274,7 +294,7 @@ class LLRecursiveDescentParser(Parser):
             else:
                 if self.parse_stack[-1].index >= len(current_rule):
                     # made it to the end of rules list, exit function
-                    self.remove_recursive_descent_highlight()
+                    self.remove_highlight()
                     self.current_node = self.parse_stack[-1].node
                     self.parse_stack.pop()
                     if len(self.parse_stack) > 0:
@@ -283,14 +303,14 @@ class LLRecursiveDescentParser(Parser):
                     # descend rule
                     self.current_node = self.parse_stack[-1].node.add_child(
                         current_rule[self.parse_stack[-1].index].item)
-                    self.highlight_recursive_descent_line(current_rule[self.parse_stack[-1].index])
+                    self.highlight_line(current_rule[self.parse_stack[-1].index])
                     self.parse_stack.append(self.RDStackFrame(
                         self.current_node, current_rule[self.parse_stack[-1].index].item, self.token_stream[0].name))
                 else:
                     # match token rule
                     if current_rule[self.parse_stack[-1].index].item == self.token_stream[0].name:
                         self.current_node = self.parse_stack[-1].node.add_child(self.token_stream[0].image)
-                        self.highlight_recursive_descent_line(
+                        self.highlight_line(
                             current_rule[self.parse_stack[-1].index])
                         self.token_stream.pop(0)
                         self.parse_stack[-1].index += 1
@@ -298,39 +318,36 @@ class LLRecursiveDescentParser(Parser):
                         self.current_node = self.parse_stack[-1].node.add_child("ERROR")
                         self.finished_parsing = True  # stop the parser
 
-    def make_html(self) -> str:
-        return HTML.RDCode.make_html(self.recursive_descent_code)
-
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
 
     def reset(self) -> None:
         super().reset()
-        self.remove_recursive_descent_highlight()
+        self.remove_highlight()
 
-    def make_recursive_descent_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
+    def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
         language: RDCodeRules.RDCodeRules = self.languages[language_index]
         rule_counter: int = 1
-        self.recursive_descent_code = []
+        self.code = []
 
         if language.program_first_statements != '':
-            self.recursive_descent_code += language.program_first_statements.split('\n')
+            self.code += language.program_first_statements.split('\n')
         if language.declare_functions:
             for declaration in self.recursive_descent_rules:
-                self.recursive_descent_code.append(
+                self.code.append(
                     language.function_declaration_beginning + declaration + language.function_declaration_end)
-            self.recursive_descent_code.append('')
-            self.recursive_descent_code.append('')
-        self.recursive_descent_code += language.first_code.split('\n')
-        self.recursive_descent_code[-1] += (self.starting_rule + language.end_of_main.split('\n')[0])
-        self.start_rule.code_line = len(self.recursive_descent_code)-1
-        self.recursive_descent_code += language.end_of_main.split('\n')[1:]
+            self.code.append('')
+            self.code.append('')
+        self.code += language.first_code.split('\n')
+        self.code[-1] += (self.starting_rule + language.end_of_main.split('\n')[0])
+        self.start_rule.code_line = len(self.code) - 1
+        self.code += language.end_of_main.split('\n')[1:]
 
         for rule_name, tokens in self.recursive_descent_rules.items():
-            self.recursive_descent_code.append(
+            self.code.append(
                 language.function_definition_beginning + rule_name + language.function_definition_end +
                 (language.start_symbol_comment if self.starting_rule == rule_name else '')+language.function_last_line)
-            self.recursive_descent_code.append(language.switch_beginning)
+            self.code.append(language.switch_beginning)
             steps_text_lists: dict[str, list[str]] = {}
             for token, steps_list in tokens.items():
                 steps_text: str = ""
@@ -346,43 +363,40 @@ class LLRecursiveDescentParser(Parser):
             for steps_list_text, token_list in steps_text_lists.items():
                 rule_text: list[str] = [token.item for token in tokens[token_list[0]]]
                 rule_text = ['epsilon'] if rule_text == [] else rule_text
-                self.recursive_descent_code += \
+                self.code += \
                     (language.case_beginning + language.case_separator.join(token_list) + language.case_end +
                         f"{language.comment_begin}P{rule_counter}: {rule_name} -> "
                         f"{' '.join(rule_text)}{language.comment_end}").split('\n')
                 rule_counter += 1
                 for token in token_list:
                     for i, step in enumerate(tokens[token]):
-                        step.code_line = i + len(self.recursive_descent_code)
-                self.recursive_descent_code += steps_list_text.split('\n')[:-1]
+                        step.code_line = i + len(self.code)
+                self.code += steps_list_text.split('\n')[:-1]
                 if language.end_of_case != '':
-                    self.recursive_descent_code += language.end_of_case.split('\n')
-            self.recursive_descent_code += language.switch_default.split('\n')
-            self.recursive_descent_code += language.function_last_line.split('\n')
-        self.recursive_descent_code.pop()
+                    self.code += language.end_of_case.split('\n')
+            self.code += language.switch_default.split('\n')
+            self.code += language.function_last_line.split('\n')
+        self.code.pop()
 
         if language.program_last_statements != '':
-            self.recursive_descent_code += language.program_last_statements.split('\n')
+            self.code += language.program_last_statements.split('\n')
 
-        self.vertical_scroll_bar_max_pos = len(self.recursive_descent_code) - 1
-
-    def highlight_recursive_descent_line(self, rule: RDRule) -> None:
-        self.remove_recursive_descent_highlight()
-        self.recursive_descent_code[rule.code_line] = (
-            HTML.RDCode.highlight_line(self.recursive_descent_code[rule.code_line]))
+    def highlight_line(self, rule: RDRule) -> None:
+        self.remove_highlight()
+        self.code[rule.code_line] = (HTML.Code.highlight_line(self.code[rule.code_line]))
         self.highlighted_rule = rule
-        self.vertical_scroll_bar_current_pos = rule.code_line
+        self.last_highlighted_line = rule.code_line
 
-    def remove_recursive_descent_highlight(self) -> None:
+    def remove_highlight(self) -> None:
         if self.highlighted_rule is not None:
-            self.recursive_descent_code[self.highlighted_rule.code_line] = (
-                HTML.RDCode.remove_highlight(self.recursive_descent_code[self.highlighted_rule.code_line]))
+            self.code[self.highlighted_rule.code_line] = (
+                HTML.Code.remove_highlight(self.code[self.highlighted_rule.code_line]))
             self.highlighted_rule = None
 
-    def update_recursive_descent_code(self, index: int) -> None:
-        self.make_recursive_descent_code(index)
+    def update_code(self, index: int) -> None:
+        self.make_code(index)
         if self.highlighted_rule is not None:
-            self.highlight_recursive_descent_line(self.highlighted_rule)
+            self.highlight_line(self.highlighted_rule)
 
 
 class LLTableDrivenParser(TableDrivenParser):
@@ -404,7 +418,22 @@ class LLTableDrivenParser(TableDrivenParser):
         super().__init__()
         self.ll_rule_list: list[str] = []
         self.ll_token_list: list[str] = []
-        self.ll_table: list[list[int]] = []
+        self.table: list[list[int]] = []
+
+    def table_height(self) -> int:
+        return len(self.table)
+
+    def table_width(self) -> int:
+        return len(self.table[0])
+
+    def table_top_row(self) -> Iterable[str]:
+        return self.ll_token_list
+
+    def table_left_col(self) -> Iterable[str]:
+        return self.ll_rule_list
+
+    def get_table(self) -> Iterable[Iterable[str]]:
+        return [['' if i < 0 else str(i) for i in row] for row in self.table]
 
     def push_rules_to_stack(self, rules: list[LLTableRule]) -> None:
         for rule in reversed(rules):
@@ -416,7 +445,7 @@ class LLTableDrivenParser(TableDrivenParser):
                              'term', 'factor_tail', 'factor', 'ro', 'ao', 'mo']
         self.ll_token_list = ['<id>', '<i_lit>', 'read', 'write', 'if', 'while', 'end', ':=', '(',
                               ')', '+', '-', '*', '/', '=', '<>', '<', '<=', '>', '>=', '<eof>']
-        self.ll_table = [
+        self.table = [
             [+1, -1,  1,  1,  1,  1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , 1],
             [+2, -1,  2,  2,  2,  2,  3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  3],
             [+4, -1,  5,  6,  7,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -456,8 +485,6 @@ class LLTableDrivenParser(TableDrivenParser):
             [self.LLTableRule(True, '+')], [self.LLTableRule(True, '-')],
             [self.LLTableRule(True, '*')], [self.LLTableRule(True, '/')]
         ]
-        self.horizontal_scroll_bar_max_pos = len(self.ll_table[0])-1
-        self.vertical_scroll_bar_max_pos = len(self.ll_table)-1
 
     def step(self) -> None:
         if len(self.parse_stack) < 1:
@@ -466,32 +493,28 @@ class LLTableDrivenParser(TableDrivenParser):
                 self.parse_stack.append(
                     self.LLStackFrame(self.tree, self.ll_table_rules[0][0].terminal, self.current_node.name))
             else:  # empty stack: finish parse
-                self.highlighted_row = self.highlighted_col = -1
+                self.curr_highlighted_row = self.curr_highlighted_col = self.last_highlighted_row = self.last_highlighted_col = -1
                 self.current_node = self.tree
                 self.finished_parsing = True
         else:
             frame = self.parse_stack.pop()
             self.current_node = frame.node
             if frame.terminal:  # terminal, match token
-                self.highlighted_row = self.highlighted_col = -1
+                self.curr_highlighted_row = self.curr_highlighted_col = -1
                 if frame.rule == self.token_stream[0].name:
                     self.current_node.name = self.token_stream.pop(0).image
                 else:
                     self.current_node.name = "ERROR"
                     self.finished_parsing = True
             else:  # non-terminal, push to stack
-                self.highlighted_row = self.horizontal_scroll_bar_current_pos = self.ll_rule_list.index(frame.rule)
-                self.highlighted_col = self.vertical_scroll_bar_current_pos = self.ll_token_list.index(self.token_stream[0].name)
-                rule_index: int = self.ll_table[self.highlighted_row][self.highlighted_col]
+                self.curr_highlighted_row = self.last_highlighted_row = self.ll_rule_list.index(frame.rule)
+                self.curr_highlighted_col = self.last_highlighted_col = self.ll_token_list.index(self.token_stream[0].name)
+                rule_index: int = self.table[self.curr_highlighted_row][self.curr_highlighted_col]
                 if rule_index < 0:
                     self.current_node = self.current_node.add_child("ERROR")
                     self.finished_parsing = True
                 else:  # rule exists
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
-
-    def make_html(self) -> str:
-        return HTML.Table.write_table(
-            self.ll_rule_list, self.ll_token_list, self.ll_table, self.highlighted_row, self.highlighted_col)
 
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
@@ -499,7 +522,7 @@ class LLTableDrivenParser(TableDrivenParser):
 
 class LRTableDrivenParser(TableDrivenParser):
     parse_stack: list[LRStackFrame]
-    lr_table: list[list[LRTableEntry]]
+    table: list[list[LRTableEntry]]
     lr_production_list: list[LRProduction]
 
     class LRStackFrame(Parser.ParseStackFrame):
@@ -528,16 +551,31 @@ class LRTableDrivenParser(TableDrivenParser):
     def __init__(self) -> None:
         super().__init__()
 
-        self.lr_table = []
+        self.table = []
         self.lr_production_list = []
         self.lr_symbol_list: list[str] = []
         self.tree_is_first_in_token_stream: bool = False
+
+    def table_height(self) -> int:
+        return len(self.table)
+
+    def table_width(self) -> int:
+        return len(self.table[0])
+
+    def table_top_row(self) -> Iterable[str]:
+        return self.lr_symbol_list
+
+    def table_left_col(self) -> Iterable[str]:
+        return map(str, range(len(self.table)))
+
+    def get_table(self) -> Iterable[Iterable[str]]:
+        return [['' if str(i) == '-1' else str(i) for i in row] for row in self.table]
 
     def generate_rules(self) -> None:
         self.lr_symbol_list = ['stmt_list', 'stmt', 'expr', 'term', 'factor', 'ao', 'mo', '<id>',
                                '<i_lit>', 'read', 'write', ':=', '(', ')', '+', '-', '*', '/', '<eof>']
         be = self.LRTableEntry('', -1)  # blank entry
-        self.lr_table = [
+        self.table = [
             [self.LRTableEntry('s', 2), self.LRTableEntry('b', 3), be, be, be, be, be, self.LRTableEntry('s', 3),
              be, self.LRTableEntry('s', 1), self.LRTableEntry('s', 4), be, be, be, be, be, be, be, be],
             [be, be, be, be, be, be, be, self.LRTableEntry('b', 5), be, be, be, be, be, be, be, be, be, be, be],
@@ -583,22 +621,20 @@ class LRTableDrivenParser(TableDrivenParser):
             self.LRProduction('factor', 1), self.LRProduction('factor', 1), self.LRProduction('ao', 1),
             self.LRProduction('ao', 1), self.LRProduction('mo', 1), self.LRProduction('mo', 1)
         ]
-        self.horizontal_scroll_bar_max_pos = len(self.lr_table[0])-1
-        self.vertical_scroll_bar_max_pos = len(self.lr_table)-1
 
     def step(self) -> None:
         if len(self.parse_stack) < 1:
             self.tree = self.current_node = Tree("")
             self.parse_stack.append(self.LRStackFrame(self.tree, "", 0))
         elif self.token_stream[0].name == self.lr_production_list[1].left_side and self.parse_stack[-1].state == 0:
-            self.highlighted_row = self.highlighted_col = -1
+            self.curr_highlighted_row = self.curr_highlighted_col = -1
             self.current_node = self.tree[0]
             self.finished_parsing = True
         else:
             current_symbol: str = self.token_stream[0].name
-            self.highlighted_row = self.horizontal_scroll_bar_current_pos = self.parse_stack[-1].state
-            self.highlighted_col = self.vertical_scroll_bar_current_pos = self.lr_symbol_list.index(current_symbol)
-            rule = self.lr_table[self.highlighted_row][self.highlighted_col]
+            self.curr_highlighted_row = self.parse_stack[-1].state
+            self.curr_highlighted_col = self.lr_symbol_list.index(current_symbol)
+            rule = self.table[self.curr_highlighted_row][self.curr_highlighted_col]
             match rule.action:
                 case 's':  # shift
                     self.token_stream.pop(0)
@@ -632,10 +668,6 @@ class LRTableDrivenParser(TableDrivenParser):
                 case _:  # parse error
                     self.current_node = self.tree.add_child("ERROR")
                     self.finished_parsing = True
-
-    def make_html(self) -> str:
-        return HTML.Table.write_table(list(range(len(self.lr_production_list))), self.lr_symbol_list,
-                                      self.lr_table, self.highlighted_row, self.highlighted_col)
 
     def parse_stack_to_str(self) -> str:
         return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"), "state")

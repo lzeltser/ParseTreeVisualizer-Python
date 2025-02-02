@@ -127,12 +127,17 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.shadow_brush = QtGui.QBrush(QtCore.Qt.GlobalColor.lightGray)
         self.stacked_brush = QtGui.QBrush(QtCore.Qt.GlobalColor.green)
-        self.unstacked_brush = QtGui.QBrush(QtCore.Qt.GlobalColor.red)
+        self.unstacked_brush = self.text_header_brush = QtGui.QBrush(QtCore.Qt.GlobalColor.red)
+
+        self.header_brush = QtGui.QBrush(QtGui.QColor(0xDC, 0xDC, 0xDC))
+        self.hl_header_brush = QtGui.QBrush(QtGui.QColor(0xB4, 0xB4, 0xB4))
+        self.hl_cell_brush = QtGui.QBrush(QtGui.QColor(0xE6, 0xE6, 0xE6))
+        self.double_hl_cell_brush = QtGui.QBrush(QtGui.QColor(0xAA, 0xAA, 0xAA))
 
     def recursive_descent_code_changed(self) -> None:
         if isinstance(self.current_parser, LLRecursiveDescentParser):
-            self.current_parser.update_recursive_descent_code(self.RDCodeSelectBox.currentIndex())
-            self.update_table_display()
+            self.current_parser.update_code(self.RDCodeSelectBox.currentIndex())
+            self.update_code_display()
 
     def grammar_update_button_pressed(self) -> None:
         self.update_grammar(self.GrammarEditBox.toPlainText())
@@ -215,16 +220,16 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stack_trace_token_list = []
         self.stack_trace_max_stack_text_len = 0
         self.stack_trace_max_token_text_len = 0
-        self.TreeScene.clear()
         self.TreeScene.setSceneRect(
             0, 0, self.graphics_settings.first_canvas_width, self.graphics_settings.first_canvas_height)
         self.TreeView.horizontalScrollBar().setValue(1)
         self.TreeView.verticalScrollBar().setValue(1)
-        # self.grammar.remove_recursive_descent_highlight()
-        self.CodeBox.setHtml(self.current_parser.make_html())
+        self.update_display()
         self.StackDisplay.setHtml('')
         self.enable_run_buttons()
         self.current_parser.lexer(self.code)
+        self.stack_trace_stack_text = []
+        self.stack_trace_token_list = []
 
     def disable_run_buttons(self) -> None:
         self.RunStopButton.setEnabled(False)
@@ -264,7 +269,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.disable_run_buttons()
 
     def update_display(self) -> None:
-        self.update_table_display()
+        self.update_code_display()
+        if self.using_table_driven_parser():
+            self.update_table_display()
 
         parse_stack_line: str = self.current_parser.parse_stack_to_str()
         self.stack_trace_max_stack_text_len = max(len(parse_stack_line), self.stack_trace_max_stack_text_len)
@@ -283,21 +290,60 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
         self.TreeScene.clear()
-        self.draw_tree(self.place_tree_on_grid())
+        if self.current_parser.tree is not None:
+            self.draw_tree(self.place_tree_on_grid())
         self.TreeScene.update()
         self.TreeView.update()
 
-    def update_table_display(self) -> None:
+    def update_code_display(self) -> None:
         self.CodeBox.setHtml(self.current_parser.make_html())
         self.move_scroll_bar(
-            self.CodeBox.horizontalScrollBar(),
-            self.current_parser.horizontal_scroll_bar_current_pos,
-            self.current_parser.horizontal_scroll_bar_max_pos
+            self.CodeBox.verticalScrollBar(),
+            self.current_parser.last_highlighted_line,
+            len(self.current_parser.code) - 1
+        )
+
+    def update_table_display(self) -> None:
+        assert isinstance(self.current_parser, TableDrivenParser)
+        self.TableBox.clear()
+        self.TableBox.setRowCount(self.current_parser.table_height())
+        self.TableBox.setColumnCount(self.current_parser.table_width())
+
+        for i, item in enumerate(self.current_parser.table_top_row()):
+            self.TableBox.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+
+            cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
+            cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            cell.setBackground(self.hl_header_brush if i == self.current_parser.curr_highlighted_col else self.header_brush)
+            cell.setForeground(self.text_header_brush)
+            self.TableBox.setHorizontalHeaderItem(i, cell)
+
+        for i, item in enumerate(self.current_parser.table_left_col()):
+            cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
+            cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            cell.setBackground(self.hl_header_brush if i == self.current_parser.curr_highlighted_row else self.header_brush)
+            cell.setForeground(self.text_header_brush)
+            self.TableBox.setVerticalHeaderItem(i, cell)
+
+        for r, row in enumerate(self.current_parser.get_table()):
+            for c, item in enumerate(row):
+                cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
+                cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                if r == self.current_parser.curr_highlighted_row and c == self.current_parser.curr_highlighted_col:
+                    cell.setBackground(self.double_hl_cell_brush)
+                elif r == self.current_parser.curr_highlighted_row or c == self.current_parser.curr_highlighted_col:
+                    cell.setBackground(self.hl_cell_brush)
+                self.TableBox.setItem(r, c, cell)
+
+        self.move_scroll_bar(
+            self.TableBox.horizontalScrollBar(),
+            self.current_parser.last_highlighted_col,
+            self.current_parser.table_width()
         )
         self.move_scroll_bar(
-            self.CodeBox.verticalScrollBar(),
-            self.current_parser.vertical_scroll_bar_current_pos,
-            self.current_parser.vertical_scroll_bar_max_pos
+            self.TableBox.verticalScrollBar(),
+            self.current_parser.last_highlighted_row,
+            self.current_parser.table_height()
         )
 
     def place_tree_on_grid(self) -> Grid[Tree]:
@@ -404,8 +450,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.graphics_settings.box_y_coord(y_pos)
         )
         box.setBrush(self.stacked_brush if on_stack else self.unstacked_brush)
-        box.setPen(self.outline_pen if highlight else
-            (self.stacked_border_pen if on_stack else self.unstacked_border_pen)
+        box.setPen(
+            self.outline_pen if highlight else (self.stacked_border_pen if on_stack else self.unstacked_border_pen)
         )
         box.setZValue(2)
         self.TreeScene.addItem(box)
