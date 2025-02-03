@@ -81,6 +81,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
         self.CodeBox.setHtml(self.current_parser.make_html())
         self.CodeEditBox.setPlainText(self.code)
+        self.TableBox.setShowGrid(True)  # TODO: add this to settings, make new graphics settings class for Table maybe
         self.TableBox.hide()
 
         # Connect buttons to methods
