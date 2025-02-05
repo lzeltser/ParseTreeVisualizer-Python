@@ -264,7 +264,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         while self.currently_running and not self.current_parser.finished_parsing:
             self.current_parser.step()
             draw_callback.emit()
-            time.sleep(1)
+            time.sleep(1.5)  # TODO: put that in the settings
         if self.current_parser.finished_parsing:
             self.run_stop_button_pressed()  # enable all the disabled buttons again
             self.disable_run_buttons()
