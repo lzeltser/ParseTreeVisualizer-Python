@@ -292,7 +292,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.TreeScene.clear()
         if self.current_parser.tree is not None:
-            self.draw_tree(self.place_tree_on_grid())
+            self.draw_tree(Grid(self.current_parser.tree, self.graphics_settings.compact_tree))
         self.TreeScene.update()
         self.TreeView.update()
 
@@ -347,21 +347,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.current_parser.table_height()
         )
 
-    def place_tree_on_grid(self) -> Grid[Tree]:
-        grid: Grid[Tree] = Grid()
-        grid.place_item((0, 0), self.current_parser.tree)
-        for child in self.current_parser.tree:
-            self.place_node_on_grid(child, grid)
-        if self.current_parser.tree.name == '':
-            grid.clear_space(grid.get_item_coords(self.current_parser.tree))
-            for x in range(grid.width):
-                for y in range(grid.height):
-                    if grid.get_item((x, y)) is None:
-                        continue
-                    grid.move_item((x, y), (x, y - 1))
-        return grid
-
-    def draw_tree(self, grid: Grid[Tree]) -> None:
+    def draw_tree(self, grid: Grid) -> None:
         self.TreeScene.setSceneRect(
             0, 0,
             max(self.TreeScene.width(), self.graphics_settings.canvas_width(grid.width)),
@@ -384,10 +370,10 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
                 for child in node:
                     self.make_line_graphic(
-                        (x, y), grid.get_item_coords(child), self.current_parser.node_on_stack(child)
+                        (x, y), grid.get_coords(child), self.current_parser.node_on_stack(child)
                     )
                     if self.graphics_settings.shadow_enabled:
-                        self.make_line_shadow_graphic((x, y), grid.get_item_coords(child))
+                        self.make_line_shadow_graphic((x, y), grid.get_coords(child))
 
                 if node is self.current_parser.current_node:
                     self.move_scroll_bar_if_off_screen(
@@ -400,37 +386,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.graphics_settings.vertical_scroll_bar_pos(y),
                         int(self.TreeScene.height())
                     )
-
-    def place_node_on_grid(self, node: Tree, grid: Grid[Tree]) -> None:
-        y_pos = grid.get_item_y_coord(node.parent) + 1
-        parents_rightest_placed_child: int = self.rightest_placed_child(node.parent, grid)
-        x_pos: int = max(
-            grid.rightmost_entries[y_pos]+1 if grid.height > y_pos else -1, grid.get_item_x_coord(node.parent)
-            if parents_rightest_placed_child < 0 else grid.get_item_x_coord(node.parent[parents_rightest_placed_child])+1)
-        grid.place_item((x_pos, y_pos), node)
-        for child in node:
-            self.place_node_on_grid(child, grid)
-
-        if self.graphics_settings.compact_tree:
-            self.fix_node_x_position(node.parent, grid)
-
-        placed_child_children: int = 1 + self.rightest_placed_child(node, grid)
-        if ((placed_child_children > 0 and placed_child_children % 2 == 0 and self.graphics_settings.compact_tree) or
-            (placed_child_children > 1 and placed_child_children % 2 == 1 and not self.graphics_settings.compact_tree)):
-            current_node = node
-            able_to_nudge = True
-            while len(current_node) > 0:
-                current_node = current_node[0]
-                x_pos, y_pos = grid.get_item_coords(current_node)
-                if x_pos < 1 or not grid.cell_is_empty((x_pos-1, y_pos)):
-                    able_to_nudge = False
-                    break
-            if able_to_nudge:
-                for child_to_nudge in node:
-                    self.nudge_node_left(child_to_nudge, grid)
-
-        if not self.graphics_settings.compact_tree:
-            self.fix_node_x_position(node.parent, grid)
 
     def make_text_graphic(self, x_pos: int, y_pos: int, text: str) -> QtWidgets.QGraphicsTextItem:
         text_graphic: QtWidgets.QGraphicsTextItem = QtWidgets.QGraphicsTextItem(text)
@@ -491,31 +446,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         )
         line_shadow.setPen(self.line_shadow_pen)
         self.TreeScene.addItem(line_shadow)
-
-    @staticmethod
-    def nudge_node_left(node: Tree, grid: Grid[Tree]) -> None:
-        for child in node:
-            Window.nudge_node_left(child, grid)
-        x_pos, y_pos = grid.get_item_coords(node)
-        grid.move_item((x_pos, y_pos), (x_pos-1, y_pos))
-
-    @staticmethod
-    def fix_node_x_position(node: Tree, grid: Grid[Tree]) -> None:
-        if node is None:
-            return
-        x_pos, y_pos = grid.get_item_coords(node)
-        new_x_position = ((grid.get_item_x_coord(node[Window.rightest_placed_child(node, grid)])
-                          - grid.get_item_x_coord(node[0])) // 2 + grid.get_item_x_coord(node[0]))
-        if x_pos != new_x_position and grid.cell_is_empty((new_x_position, y_pos)):
-            grid.move_item((x_pos, y_pos), (new_x_position, y_pos))
-            Window.fix_node_x_position(node.parent, grid)
-
-    @staticmethod
-    def rightest_placed_child(node: Tree, grid: Grid[Tree]) -> int:
-        for i, child in enumerate(reversed(node.children)):
-            if grid.has_item(child):
-                return len(node)-i-1
-        return -1
 
     @staticmethod
     def move_scroll_bar(scroll_bar: QtWidgets.QScrollBar, position_to_set: int, max_position: int) -> None:
