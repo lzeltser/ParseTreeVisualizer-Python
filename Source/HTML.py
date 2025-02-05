@@ -31,10 +31,10 @@ p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; m
     html_middle: str = r"""</span></p></td><td><p align="left">   """
     html_end: str = r"""</p></td></tr></table></body></html>"""
 
-    @staticmethod
-    def make_html(stack_text: list[str], token_text: list[str]) -> str:
-        return (StackTrace.html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
-                StackTrace.html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + StackTrace.html_end)
+    @classmethod
+    def make_html(cls, stack_text: list[str], token_text: list[str]) -> str:
+        return (cls.html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
+                cls.html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + cls.html_end)
 
 
 class Code:
@@ -47,19 +47,19 @@ p { white-space: pre-wrap; }
     highlight_start: str = r"""<highlight style="background-color:red;">"""
     highlight_end: str = r""" </highlight>"""
 
-    @staticmethod
-    def add_escape_sequences(text: str) -> str:
-        return (Code.highlight_start + add_escape_sequences(text).removeprefix(Code.highlight_line_code) +
-                Code.highlight_end) if text.startswith(Code.highlight_line_code) else add_escape_sequences(text)
+    @classmethod
+    def add_escape_sequences(cls, text: str) -> str:
+        return (cls.highlight_start + add_escape_sequences(text).removeprefix(cls.highlight_line_code) +
+                cls.highlight_end) if text.startswith(cls.highlight_line_code) else add_escape_sequences(text)
 
-    @staticmethod
-    def make_html(text: list[str]) -> str:
-        return Code.html_start + '<br>'.join(map(Code.add_escape_sequences, text)) + Code.html_end
+    @classmethod
+    def make_html(cls, text: list[str]) -> str:
+        return cls.html_start + '<br>'.join(map(cls.add_escape_sequences, text)) + cls.html_end
 
-    @staticmethod
-    def highlight_line(line: str) -> str:
-        return Code.highlight_line_code + line
+    @classmethod
+    def highlight_line(cls, line: str) -> str:
+        return cls.highlight_line_code + line
 
-    @staticmethod
-    def remove_highlight(line: str) -> str:
-        return line.removeprefix(Code.highlight_line_code)
+    @classmethod
+    def remove_highlight(cls, line: str) -> str:
+        return line.removeprefix(cls.highlight_line_code)
