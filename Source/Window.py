@@ -356,7 +356,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         for x in range(grid.width):
             for y in range(grid.height):
-                node: Tree = grid.get_item((x, y))
+                node: Tree = grid.get_node((x, y))
                 if node is None:
                     continue
 
