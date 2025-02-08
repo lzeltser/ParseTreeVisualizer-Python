@@ -20,17 +20,10 @@ from Tree import Tree
 
 
 class Grid:
-    class Entry:
-        def __init__(self, x_pos: int, y_pos: int, item: Tree | None = None) -> None:
-            self.x_pos: int = x_pos
-            self.y_pos: int = y_pos
-            self.object: Tree | None = item
-
     def __init__(self, tree: Tree, compact_tree: bool) -> None:
         self.tree: Tree = tree
-        self.grid: list[list[Grid.Entry]] = [[self.Entry(0, 0, None)]]
+        self.grid: list[list[Tree | None]] = [[self.tree]]
 
-        self.place_node((0, 0), self.tree)
         for child in self.tree:
             self.place_node_on_grid(child, compact_tree)
 
@@ -49,28 +42,25 @@ class Grid:
         return self.get_node(coords) is None
 
     def has_item(self, node: Tree) -> bool:
-        return self.get_coords(node) != (-1, -1)
+        return self.get_coords(node) is not None
 
     def expand(self, new_width: int = 0, new_height: int = 0) -> None:
-        for row_index in range(self.height, new_height+1):
-            for column_index, column in enumerate(self.grid):
-                column.append(self.Entry(column_index, row_index))
-        for column in range(self.width, new_width+1):
-            self.grid.append([self.Entry(row, column) for row in range(self.height)])
+        for column in self.grid:
+            column += [None] * (new_height-self.height+1)
+        self.grid += [[None] * self.height] * (new_width-self.width+1)
 
     def place_node(self, coords: tuple[int, int], node: Tree | None) -> None:
         self.expand(coords[0], coords[1])
-        self.grid[coords[0]][coords[1]].object = node
+        self.grid[coords[0]][coords[1]] = node
 
     def get_node(self, coords: tuple[int, int]) -> Tree | None:
-        return None if coords[0] >= self.width or coords[1] >= self.height else self.grid[coords[0]][coords[1]].object
+        return None if coords[0] >= self.width or coords[1] >= self.height else self.grid[coords[0]][coords[1]]
 
     def get_coords(self, node: Tree) -> tuple[int, int]:
         for x, row in enumerate(self.grid):
             for y, cell in enumerate(row):
-                if cell.object is node:
+                if cell is node:
                     return x, y
-        return -1, -1
 
     def get_x_coord(self, node: Tree) -> int:
         return self.get_coords(node)[0]
@@ -87,11 +77,7 @@ class Grid:
 
     def place_node_on_grid(self, node: Tree, compact_tree: bool) -> None:
         y_pos = self.get_y_coord(node.parent) + 1
-        parents_rightest_placed_child: int = self.rightest_placed_child(node.parent)
-        x_pos: int = max(
-            self.rightmost_mode(y_pos)+1 if self.height > y_pos else -1, self.get_x_coord(node.parent)
-            if parents_rightest_placed_child < 0 else self.get_x_coord(node.parent[parents_rightest_placed_child]) + 1
-        )
+        x_pos: int = max(self.rightmost_mode(y_pos)+1, self.get_x_coord(node.parent))
         self.place_node((x_pos, y_pos), node)
         for child in node:
             self.place_node_on_grid(child,  compact_tree)
@@ -99,7 +85,7 @@ class Grid:
         if compact_tree:
             self.fix_node_x_position(node.parent)
 
-        placed_child_children: int = 1 + self.rightest_placed_child(node)
+        placed_child_children: int = self.placed_children(node)
         if ((placed_child_children > 0 and placed_child_children % 2 == 0 and compact_tree) or
             (placed_child_children > 1 and placed_child_children % 2 == 1 and not compact_tree)):
             current_node = node
@@ -141,15 +127,15 @@ class Grid:
             return
         x_pos, y_pos = self.get_coords(node)
         new_x_position = (
-                (self.get_x_coord(node[self.rightest_placed_child(node)])
+                (self.get_x_coord(node[self.placed_children(node)-1])
                  - self.get_x_coord(node[0])) // 2 + self.get_x_coord(node[0])
         )
         if x_pos != new_x_position and self.cell_is_empty((new_x_position, y_pos)):
             self.move_node((x_pos, y_pos), (new_x_position, y_pos))
             self.fix_node_x_position(node.parent)
 
-    def rightest_placed_child(self, node: Tree) -> int:
+    def placed_children(self, node: Tree) -> int:
         for i, child in enumerate(reversed(node.children)):
             if self.has_item(child):
-                return len(node) - i - 1
-        return -1
+                return len(node) - i
+        return 0
