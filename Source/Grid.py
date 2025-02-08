@@ -73,7 +73,33 @@ class Grid:
         self.clear_space(old_coords)
 
     def clear_space(self, coords: tuple[int, int]) -> None:
-        self.place_node(coords, None)
+        if coords[0] < self.width and coords[1] < self.height:
+            self.grid[coords[0]][coords[1]] = None
+
+    def rightmost_mode(self, y: int) -> int:
+        for x in reversed(range(self.width)):
+            if not self.cell_is_empty((x, y)):
+                return x
+        return -1
+
+    def placed_children(self, node: Tree) -> int:
+        for i, child in enumerate(reversed(node.children)):
+            if self.has_item(child):
+                return len(node) - i
+        return 0
+
+    def nudge_node_left(self, node: Tree) -> None:
+        for child in node:
+            self.nudge_node_left(child)
+        x_pos, y_pos = self.get_coords(node)
+        self.move_node((x_pos, y_pos), (x_pos - 1, y_pos))
+
+    def nudge_nodes_up(self) -> None:
+        self.clear_space(self.get_coords(self.tree))
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.get_node((x, y)) is not None:
+                    self.move_node((x, y), (x, y - 1))
 
     def place_node_on_grid(self, node: Tree, compact_tree: bool) -> None:
         y_pos = self.get_y_coord(node.parent) + 1
@@ -103,25 +129,6 @@ class Grid:
         if not compact_tree:
             self.fix_node_x_position(node.parent)
 
-    def rightmost_mode(self, y: int) -> int:
-        for x in reversed(range(self.width)):
-            if not self.cell_is_empty((x, y)):
-                return x
-        return -1
-
-    def nudge_node_left(self, node: Tree) -> None:
-        for child in node:
-            self.nudge_node_left(child)
-        x_pos, y_pos = self.get_coords(node)
-        self.move_node((x_pos, y_pos), (x_pos - 1, y_pos))
-
-    def nudge_nodes_up(self) -> None:
-        self.clear_space(self.get_coords(self.tree))
-        for x in range(self.width):
-            for y in range(self.height):
-                if self.get_node((x, y)) is not None:
-                    self.move_node((x, y), (x, y - 1))
-
     def fix_node_x_position(self, node: Tree) -> None:
         if node is None:
             return
@@ -133,9 +140,3 @@ class Grid:
         if x_pos != new_x_position and self.cell_is_empty((new_x_position, y_pos)):
             self.move_node((x_pos, y_pos), (new_x_position, y_pos))
             self.fix_node_x_position(node.parent)
-
-    def placed_children(self, node: Tree) -> int:
-        for i, child in enumerate(reversed(node.children)):
-            if self.has_item(child):
-                return len(node) - i
-        return 0
