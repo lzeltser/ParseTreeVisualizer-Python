@@ -29,7 +29,6 @@ class Grid:
     def __init__(self, tree: Tree, compact_tree: bool) -> None:
         self.tree: Tree = tree
         self.grid: list[list[Grid.Entry]] = [[self.Entry(0, 0, None)]]
-        self.rightmost_entries: list[int] = [-1]
 
         self.place_node((0, 0), self.tree)
         for child in self.tree:
@@ -54,7 +53,6 @@ class Grid:
 
     def expand(self, new_width: int = 0, new_height: int = 0) -> None:
         for row_index in range(self.height, new_height+1):
-            self.rightmost_entries.append(-1)
             for column_index, column in enumerate(self.grid):
                 column.append(self.Entry(column_index, row_index))
         for column in range(self.width, new_width+1):
@@ -63,13 +61,6 @@ class Grid:
     def place_node(self, coords: tuple[int, int], node: Tree | None) -> None:
         self.expand(coords[0], coords[1])
         self.grid[coords[0]][coords[1]].object = node
-        if node is None:
-            for i in reversed(range(self.width)):
-                if self.grid[i][coords[1]].object is not None:
-                    self.rightmost_entries[coords[1]] = i
-                    break
-        else:
-            self.rightmost_entries[coords[1]] = max(self.rightmost_entries[coords[1]], coords[0])
 
     def get_node(self, coords: tuple[int, int]) -> Tree | None:
         return None if coords[0] >= self.width or coords[1] >= self.height else self.grid[coords[0]][coords[1]].object
@@ -98,7 +89,7 @@ class Grid:
         y_pos = self.get_y_coord(node.parent) + 1
         parents_rightest_placed_child: int = self.rightest_placed_child(node.parent)
         x_pos: int = max(
-            self.rightmost_entries[y_pos]+1 if self.height > y_pos else -1, self.get_x_coord(node.parent)
+            self.rightmost_mode(y_pos)+1 if self.height > y_pos else -1, self.get_x_coord(node.parent)
             if parents_rightest_placed_child < 0 else self.get_x_coord(node.parent[parents_rightest_placed_child]) + 1
         )
         self.place_node((x_pos, y_pos), node)
@@ -125,6 +116,12 @@ class Grid:
 
         if not compact_tree:
             self.fix_node_x_position(node.parent)
+
+    def rightmost_mode(self, y: int) -> int:
+        for x in reversed(range(self.width)):
+            if not self.cell_is_empty((x, y)):
+                return x
+        return -1
 
     def nudge_node_left(self, node: Tree) -> None:
         for child in node:
