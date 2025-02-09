@@ -118,26 +118,30 @@ class Grid:
         for child in node:
             self.place_node_on_grid(child,  compact_tree)
 
-        if compact_tree:
-            self.fix_node_x_position(node.parent)
+            if compact_tree:
+                self.fix_node_x_position(node.parent)
 
-        placed_child_children: int = self.placed_children(node)
-        if ((placed_child_children > 0 and placed_child_children % 2 == 0 and compact_tree) or
-            (placed_child_children > 1 and placed_child_children % 2 == 1 and not compact_tree)):
-            current_node = node
-            able_to_nudge = True
-            while len(current_node) > 0:
-                current_node = current_node[0]
-                x_pos, y_pos = self.get_coords(current_node)
-                if x_pos < 1 or not self.cell_is_empty((x_pos-1, y_pos)):
-                    able_to_nudge = False
-                    break
-            if able_to_nudge:
-                for child_to_nudge in node:
-                    self.nudge_node_left(child_to_nudge)
+            if ((self.placed_children(node) > 0 and self.placed_children(node) % 2 == 0 and compact_tree) or
+                (self.placed_children(node) > 1 and self.placed_children(node) % 2 == 1 and not compact_tree)):
+                if self.can_nudge(node):
+                    for child_to_nudge in node:
+                        self.nudge_node_left(child_to_nudge)
 
-        if not compact_tree:
-            self.fix_node_x_position(node.parent)
+            if not compact_tree:
+                self.fix_node_x_position(node.parent)
+
+    def can_nudge(self, node: Tree) -> bool:
+        for y, x in enumerate(self.leftmost_children(node, [], 0)[1:]):
+            if x < 1 or not self.cell_is_empty((x-1, y+1+self.get_y_coord(node))):
+                return False
+        return True
+
+    def leftmost_children(self, node: Tree, curr_list: list[int], level: int) -> list[int]:
+        for child in node:
+            self.leftmost_children(child, curr_list, level+1)
+        curr_list += [self.width] * (level-len(curr_list)+1)
+        curr_list[level] = min(curr_list[level], self.get_x_coord(node))
+        return curr_list
 
     def fix_node_x_position(self, node: Tree) -> None:
         if node is None:

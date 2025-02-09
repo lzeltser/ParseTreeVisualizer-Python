@@ -23,7 +23,6 @@ Parse Tree Visualizer has been developed using Python 3.13.1 and only
 tested on this version and a Windows 10 machine.
 
 ## Known bugs
-* The parse tree is not placed on the grid properly when drawn
 * Highlighted line is not removed on reset from the grammar on
 table driven algorithms
 
@@ -47,7 +46,7 @@ leonzeltser at gmail dot com.
 
 ## Credits
 * Author - Leon Zeltser
-* Mentor - Dr. Charles Tom Wilkes
+* Mentor - Dr. Charles Thomas Wilkes
 * Committee Member - Dr. Matteo Cimini
 
 Parse Tree Visualizer is a port of a Java applet made by Dr. Zerksis
