@@ -38,11 +38,16 @@ class Grid:
     def height(self) -> int:
         return len(self.grid[-1])
 
+    @staticmethod
+    def assert_coords_are_valid(coords: tuple[int, int]) -> None:
+        assert coords[0] >= 0
+        assert coords[1] >= 0
+
     def cell_is_empty(self, coords: tuple[int, int]) -> bool:
         return self.get_node(coords) is None
 
     def has_item(self, node: Tree) -> bool:
-        return self.get_coords(node) is not None
+        return self.get_coords(node) != (-1, -1)
 
     def expand(self, new_width: int = 0, new_height: int = 0) -> None:
         for column in self.grid:
@@ -50,10 +55,12 @@ class Grid:
         self.grid += [[None] * self.height] * (new_width-self.width+1)
 
     def place_node(self, coords: tuple[int, int], node: Tree | None) -> None:
+        self.assert_coords_are_valid(coords)
         self.expand(coords[0], coords[1])
         self.grid[coords[0]][coords[1]] = node
 
     def get_node(self, coords: tuple[int, int]) -> Tree | None:
+        self.assert_coords_are_valid(coords)
         return None if coords[0] >= self.width or coords[1] >= self.height else self.grid[coords[0]][coords[1]]
 
     def get_coords(self, node: Tree) -> tuple[int, int]:
@@ -61,6 +68,7 @@ class Grid:
             for y, cell in enumerate(row):
                 if cell is node:
                     return x, y
+        return -1, -1
 
     def get_x_coord(self, node: Tree) -> int:
         return self.get_coords(node)[0]
@@ -73,13 +81,15 @@ class Grid:
         self.clear_space(old_coords)
 
     def clear_space(self, coords: tuple[int, int]) -> None:
+        self.assert_coords_are_valid(coords)
         if coords[0] < self.width and coords[1] < self.height:
             self.grid[coords[0]][coords[1]] = None
 
     def rightmost_mode(self, y: int) -> int:
-        for x in reversed(range(self.width)):
-            if not self.cell_is_empty((x, y)):
-                return x
+        if y < self.height:
+            for x in reversed(range(self.width)):
+                if not self.cell_is_empty((x, y)):
+                    return x
         return -1
 
     def placed_children(self, node: Tree) -> int:
