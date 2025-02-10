@@ -101,8 +101,7 @@ class Grid:
     def nudge_node_left(self, node: Tree) -> None:
         for child in node:
             self.nudge_node_left(child)
-        x_pos, y_pos = self.get_coords(node)
-        self.move_node((x_pos, y_pos), (x_pos - 1, y_pos))
+        self.move_node(self.get_coords(node), (self.get_x_coord(node)-1, self.get_y_coord(node)))
 
     def nudge_nodes_up(self) -> None:
         self.clear_space(self.get_coords(self.tree))
@@ -124,7 +123,8 @@ class Grid:
 
             if self.should_nudge_children(node, compact_tree) and  self.can_nudge_children(node):
                 for child_to_nudge in node:
-                    self.nudge_node_left(child_to_nudge)
+                    if self.has_item(child_to_nudge):
+                        self.nudge_node_left(child_to_nudge)
 
             if not compact_tree:
                 self.fix_node_x_position(node)
@@ -143,7 +143,7 @@ class Grid:
     def leftmost_children(self, node: Tree, curr_list: list[int], level: int) -> list[int]:
         curr_list += [self.width] * (level-len(curr_list)+1)
         for child in node:
-            curr_list[level] = min(curr_list[level], self.get_x_coord(child))
+            curr_list[level] = min(curr_list[level], self.get_x_coord(child), key=lambda x: self.width if x < 0 else x)
             self.leftmost_children(child, curr_list, level+1)
         return curr_list
 
