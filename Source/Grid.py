@@ -112,23 +112,27 @@ class Grid:
                     self.move_node((x, y), (x, y - 1))
 
     def place_tree_on_grid(self, node: Tree, compact_tree: bool) -> None:
-        y_pos = self.get_y_coord(node.parent) + 1
-        x_pos: int = max(self.rightmost_mode(y_pos)+1, self.get_x_coord(node.parent))
-        self.place_node((x_pos, y_pos), node)
+        self.place_node((
+            max(self.rightmost_mode(self.get_y_coord(node.parent)+1)+1, self.get_x_coord(node.parent)),
+            self.get_y_coord(node.parent)+1
+        ), node)
         for child in node:
             self.place_tree_on_grid(child, compact_tree)
 
             if compact_tree:
                 self.fix_node_x_position(node)
 
-            if ((self.placed_children(node) > 0 and self.placed_children(node) % 2 == 0 and compact_tree) or
-                (self.placed_children(node) > 1 and self.placed_children(node) % 2 == 1 and not compact_tree)):
-                if self.can_nudge_children(node):
-                    for child_to_nudge in node:
-                        self.nudge_node_left(child_to_nudge)
+            if self.should_nudge_children(node, compact_tree) and  self.can_nudge_children(node):
+                for child_to_nudge in node:
+                    self.nudge_node_left(child_to_nudge)
 
             if not compact_tree:
                 self.fix_node_x_position(node)
+
+    def should_nudge_children(self, node: Tree, compact_tree: bool) -> bool:
+        return (self.placed_children(node) > 1 and
+                ((self.placed_children(node) % 2 == 0 and compact_tree) or
+                 (self.placed_children(node) % 2 == 1 and not compact_tree)))
 
     def can_nudge_children(self, node: Tree) -> bool:
         for y, x in enumerate(self.leftmost_children(node, [], 0)):
@@ -144,12 +148,12 @@ class Grid:
         return curr_list
 
     def fix_node_x_position(self, node: Tree) -> None:
-        x_pos, y_pos = self.get_coords(node)
-        new_x_position = (
-                (self.get_x_coord(node[self.placed_children(node)-1])
-                 - self.get_x_coord(node[0])) // 2 + self.get_x_coord(node[0])
-        )
-        if x_pos != new_x_position and self.cell_is_empty((new_x_position, y_pos)):
-            self.move_node((x_pos, y_pos), (new_x_position, y_pos))
+        if (self.get_x_coord(node) != self.node_x_position(node) and
+                self.cell_is_empty((self.node_x_position(node), self.get_y_coord(node)))):
+            self.move_node(self.get_coords(node), (self.node_x_position(node), self.get_y_coord(node)))
             if node.parent is not None:
                 self.fix_node_x_position(node.parent)
+
+    def node_x_position(self, node: Tree) -> int:
+        return ((self.get_x_coord(node[self.placed_children(node)-1])-self.get_x_coord(node[0])) // 2
+                + self.get_x_coord(node[0]))
