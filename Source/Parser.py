@@ -128,23 +128,8 @@ class Parser:
     def step(self) -> None: ...
     def parse_stack_to_str(self) -> str: ...
 
-    @staticmethod
-    def iterable_attributes_to_str(iterable: Iterable, *args: tuple[str, ...] | str, separator: str = ' ') -> str:
-        stream = ''
-        for item in iterable:
-            for arg in args:
-                if type(arg) == str:
-                    obj = getattr(item, arg)
-                else:
-                    obj = item
-                    for attr in arg:
-                        obj = getattr(obj, attr)
-                stream += str(obj)
-                stream += separator
-        return '' if stream == '' else stream[:-len(separator)]
-
     def token_stream_to_str(self) -> str:
-        return self.iterable_attributes_to_str(self.token_stream, "image")
+        return ' '.join(map(lambda x: x.image, self.token_stream))
 
 
 class TableDrivenParser(Parser):
@@ -319,7 +304,7 @@ class LLRecursiveDescentParser(Parser):
                         self.finished_parsing = True  # stop the parser
 
     def parse_stack_to_str(self) -> str:
-        return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
+        return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def reset(self) -> None:
         super().reset()
@@ -519,7 +504,7 @@ class LLTableDrivenParser(TableDrivenParser):
                     self.highlight_line(rule_index-1)
 
     def parse_stack_to_str(self) -> str:
-        return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"))
+        return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
 
 class LRTableDrivenParser(TableDrivenParser):
@@ -675,7 +660,7 @@ class LRTableDrivenParser(TableDrivenParser):
                     self.finished_parsing = True
 
     def parse_stack_to_str(self) -> str:
-        return self.iterable_attributes_to_str(self.parse_stack, ("node", "name"), "state")
+        return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def reset(self) -> None:
         super().reset()
