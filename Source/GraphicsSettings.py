@@ -65,7 +65,7 @@ class GraphicsSettings:
         self.line_width = 2
         self.outline_width = 3
 
-        self.compact_tree = True
+        self.compact_tree = False
 
         self.stacked_color = (0, 255, 0)
         self.unstacked_color = (255, 0, 0)
