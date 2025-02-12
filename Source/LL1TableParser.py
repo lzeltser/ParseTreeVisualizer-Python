@@ -39,7 +39,7 @@ class LL1TableParser(TableParser):
             self.item: str = item
 
     def __init__(self) -> None:
-        super().__init__()
+        self.reset()
         self.ll_rule_list: list[str] = []
         self.ll_token_list: list[str] = []
         self.table: list[list[int]] = []

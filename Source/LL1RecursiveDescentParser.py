@@ -44,13 +44,12 @@ class LL1RecursiveDescentParser(Parser):
             self.code_line: int = -1
 
     def __init__(self) -> None:
+        self.reset()
         self.starting_rule: str = ''
-
         self.highlighted_rule = None
         self.recursive_descent_rules = {}
         self.start_rule = self.RDRule('', True)
         self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
-        super().__init__()
 
     def generate_rules(self) -> None:
         new_recursive_descent_rules = {}

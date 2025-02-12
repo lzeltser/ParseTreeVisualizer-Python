@@ -52,7 +52,7 @@ class SLRTableParser(TableParser):
             self.right_side_len: int = right_side_len
 
     def __init__(self) -> None:
-        super().__init__()
+        self.reset()
 
         self.table = []
         self.lr_production_list = []

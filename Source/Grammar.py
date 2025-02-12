@@ -203,6 +203,8 @@ class Grammar:
         return [make_str(i, r) for i, r, in enumerate(self.rules, start=1)]
 
     def lexer(self, code: str) -> list[Token]:
+        # TODO: make state machine
+
         def get_potential_tokens(list_: list[str], current_token_: str) -> list[str]:
             return [item for item in list_ if item.startswith(current_token_)]
 

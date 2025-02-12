@@ -25,7 +25,7 @@ from Tree import Tree
 
 
 class Parser:
-    grammar: Grammar | None
+    grammar: Grammar
     tree: Tree | None
     current_node: Tree | None
     parse_stack: list[ParseStackFrame]
@@ -38,19 +38,12 @@ class Parser:
         def __init__(self, node: Tree) -> None:
             self.node = node
 
-    def __init__(self) -> None:
-        self.grammar = None
-        self.code = []
-        self.reset()
-
     def input_grammar(self, description: str) -> None:
         self.grammar = Grammar(description)
         self.generate_rules()
 
     def new_code(self, code: str) -> None:
         self.token_stream = self.grammar.lexer(code)
-
-    def reset(self) -> None: ...
 
     def node_on_stack(self, node: Tree) -> bool:
         for item in self.parse_stack:
@@ -61,12 +54,13 @@ class Parser:
     def make_html(self) -> str:
         return HTML.Code.make_html(self.code)
 
+    def token_stream_to_str(self) -> str:
+        return ' '.join(map(lambda x: x.image, self.token_stream))
+
     def generate_rules(self) -> None: ...
     def step(self) -> None: ...
     def parse_stack_to_str(self) -> str: ...
-
-    def token_stream_to_str(self) -> str:
-        return ' '.join(map(lambda x: x.image, self.token_stream))
+    def reset(self) -> None: ...
 
 
 class TableParser(Parser):
