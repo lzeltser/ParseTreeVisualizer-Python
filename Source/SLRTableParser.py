@@ -179,5 +179,15 @@ class SLRTableParser(TableParser):
         return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def reset(self) -> None:
-        super().reset()
+        self.tree = None
+        self.current_node = None
+        self.parse_stack = []
+        self.token_stream = []
+        self.finished_parsing = False
+        self.last_highlighted_line = -1
+        self.curr_highlighted_row = -1
+        self.curr_highlighted_col = -1
+        self.last_highlighted_row = -1
+        self.last_highlighted_col = -1
         self.tree_is_first_in_token_stream = False
+        self.remove_highlight()

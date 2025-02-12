@@ -23,8 +23,6 @@ Parse Tree Visualizer has been developed using Python 3.13.1 and only
 tested on this version and a Windows 10 machine.
 
 ## Known bugs
-* Highlighted line is not removed on reset from the grammar on
-table driven algorithms
 
 ## Future plans
 This project is a work in progress. The following are features I

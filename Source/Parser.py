@@ -106,13 +106,7 @@ class Parser:
         token_stream.append(self.Token('<eof>'))
         self.token_stream = token_stream
 
-    def reset(self) -> None:
-        self.tree = None
-        self.current_node = None
-        self.parse_stack = []
-        self.token_stream = []
-        self.finished_parsing = False
-        self.last_highlighted_line = -1
+    def reset(self) -> None: ...
 
     def node_on_stack(self, node: Tree) -> bool:
         for item in self.parse_stack:
@@ -145,22 +139,12 @@ class TableParser(Parser):
     def table_left_col(self) -> Iterable[str]: ...
     def get_table(self) -> Iterable[Iterable[str]]: ...
 
-    def reset(self) -> None:
-        super().reset()
-        self.curr_highlighted_row = -1
-        self.curr_highlighted_col = -1
-        self.last_highlighted_row = -1
-        self.last_highlighted_col = -1
-
     def input_grammar(self, description: str) -> None:
         super().input_grammar(description)
         self.code = self.grammar.make_list()
 
     def highlight_line(self, line: int) -> None:
-        self.remove_highlight()
-        self.code[line] = HTML.Code.highlight_line(self.code[line])
-        self.last_highlighted_line = line
+        self.last_highlighted_line = HTML.Code.highlighted_line = line
 
     def remove_highlight(self) -> None:
-        if 0 <= self.last_highlighted_line < len(self.code):
-            self.code[self.last_highlighted_line] = HTML.Code.remove_highlight(self.code[self.last_highlighted_line])
+        HTML.Code.highlighted_line = -1

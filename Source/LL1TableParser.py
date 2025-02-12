@@ -144,3 +144,16 @@ class LL1TableParser(TableParser):
 
     def parse_stack_to_str(self) -> str:
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
+
+    def reset(self) -> None:
+        self.tree = None
+        self.current_node = None
+        self.parse_stack = []
+        self.token_stream = []
+        self.finished_parsing = False
+        self.last_highlighted_line = -1
+        self.curr_highlighted_row = -1
+        self.curr_highlighted_col = -1
+        self.last_highlighted_row = -1
+        self.last_highlighted_col = -1
+        self.remove_highlight()

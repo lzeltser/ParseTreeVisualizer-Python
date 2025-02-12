@@ -162,7 +162,12 @@ class LL1RecursiveDescentParser(Parser):
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def reset(self) -> None:
-        super().reset()
+        self.tree = None
+        self.current_node = None
+        self.parse_stack = []
+        self.token_stream = []
+        self.finished_parsing = False
+        self.last_highlighted_line = -1
         self.remove_highlight()
 
     def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
@@ -223,14 +228,12 @@ class LL1RecursiveDescentParser(Parser):
 
     def highlight_line(self, rule: RDRule) -> None:
         self.remove_highlight()
-        self.code[rule.code_line] = (HTML.Code.highlight_line(self.code[rule.code_line]))
         self.highlighted_rule = rule
-        self.last_highlighted_line = rule.code_line
+        self.last_highlighted_line = HTML.Code.highlighted_line = rule.code_line
 
     def remove_highlight(self) -> None:
         if self.highlighted_rule is not None:
-            self.code[self.highlighted_rule.code_line] = (
-                HTML.Code.remove_highlight(self.code[self.highlighted_rule.code_line]))
+            HTML.Code.highlighted_line = -1
             self.highlighted_rule = None
 
     def update_code(self, index: int) -> None:

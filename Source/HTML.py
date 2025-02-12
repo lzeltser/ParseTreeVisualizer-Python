@@ -43,23 +43,15 @@ class Code:
 p { white-space: pre-wrap; }
 </style></head><body style=" font-family:'Courier New', monospace; font-size:9pt; font-weight:400; font-style:normal;"><p>"""
     html_end: str = r"""</p></body></html>"""
-    highlight_line_code: str = r"""+==HIGHLIGHT_THIS_LINE=="""
     highlight_start: str = r"""<highlight style="background-color:red;">"""
     highlight_end: str = r""" </highlight>"""
+    highlighted_line: int = -1
 
     @classmethod
-    def add_escape_sequences(cls, text: str) -> str:
-        return (cls.highlight_start + add_escape_sequences(text).removeprefix(cls.highlight_line_code) +
-                cls.highlight_end) if text.startswith(cls.highlight_line_code) else add_escape_sequences(text)
+    def line_to_html(cls, input_: tuple[int, str]) -> str:
+        return (cls.highlight_start + add_escape_sequences(input_[1]) + cls.highlight_end
+                if input_[0] == cls.highlighted_line else add_escape_sequences(input_[1]))
 
     @classmethod
     def make_html(cls, text: list[str]) -> str:
-        return cls.html_start + '<br>'.join(map(cls.add_escape_sequences, text)) + cls.html_end
-
-    @classmethod
-    def highlight_line(cls, line: str) -> str:
-        return cls.highlight_line_code + line
-
-    @classmethod
-    def remove_highlight(cls, line: str) -> str:
-        return line.removeprefix(cls.highlight_line_code)
+        return cls.html_start + '<br>'.join(map(cls.line_to_html, enumerate(text))) + cls.html_end
