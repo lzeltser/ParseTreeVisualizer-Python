@@ -227,14 +227,12 @@ class LL1RecursiveDescentParser(Parser):
             self.code += language.program_last_statements.split('\n')
 
     def highlight_line(self, rule: RDRule) -> None:
-        self.remove_highlight()
         self.highlighted_rule = rule
         self.last_highlighted_line = HTML.Code.highlighted_line = rule.code_line
 
     def remove_highlight(self) -> None:
-        if self.highlighted_rule is not None:
-            HTML.Code.highlighted_line = -1
-            self.highlighted_rule = None
+        HTML.Code.highlighted_line = -1
+        self.highlighted_rule = None
 
     def update_code(self, index: int) -> None:
         self.make_code(index)

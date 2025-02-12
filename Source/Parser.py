@@ -126,12 +126,10 @@ class Parser:
 
 
 class TableParser(Parser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.curr_highlighted_row: int = -1
-        self.curr_highlighted_col: int = -1
-        self.last_highlighted_row: int = -1
-        self.last_highlighted_col: int = -1
+    curr_highlighted_row: int
+    last_highlighted_row: int
+    curr_highlighted_col: int
+    last_highlighted_col: int
 
     def table_height(self) -> int: ...
     def table_width(self) -> int: ...
@@ -146,5 +144,6 @@ class TableParser(Parser):
     def highlight_line(self, line: int) -> None:
         self.last_highlighted_line = HTML.Code.highlighted_line = line
 
-    def remove_highlight(self) -> None:
+    @staticmethod
+    def remove_highlight() -> None:
         HTML.Code.highlighted_line = -1
