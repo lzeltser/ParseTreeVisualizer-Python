@@ -148,7 +148,7 @@ class SLRTableParser(TableParser):
                 case 'r':  # reduce
                     self.highlight_line(rule.target-1)
                     production = self.lr_production_list[rule.target]
-                    self.token_stream.insert(0, self.Token(production.left_side))
+                    self.token_stream.insert(0, self.grammar.Token(production.left_side))
                     self.tree_is_first_in_token_stream = True
                     popped_nodes: list[Tree] = []
                     for _ in range(production.right_side_len):
@@ -159,7 +159,7 @@ class SLRTableParser(TableParser):
                     self.highlight_line(rule.target-1)
                     self.token_stream.pop(0)
                     production = self.lr_production_list[rule.target]
-                    self.token_stream.insert(0, self.Token(production.left_side))
+                    self.token_stream.insert(0, self.grammar.Token(production.left_side))
                     popped_nodes: list[Tree] = []
                     for _ in range(production.right_side_len - 1):
                         self.parse_stack.pop()

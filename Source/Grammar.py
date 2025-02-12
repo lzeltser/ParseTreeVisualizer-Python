@@ -36,11 +36,22 @@ class Grammar:
         def make_formatted_str(self, longest_rule_len: int) -> str:
             return '<' + self.name + '>' + ' ' * (longest_rule_len - len(self.name)) + ' ::= ' + ' '.join(map(str, self.rules))
 
+    class Token:
+        def __init__(self, name: str, image: str = None) -> None:
+            self.name = name
+            self.image = name if image is None else image
+
+        def __str__(self) -> str:
+            return self.image
+
     class GrammarParsingError(Exception):
         pass
 
+    class LexingException(Exception):
+        pass
+
     def __init__(self, description: str) -> None:
-        self.description: str = description
+        self.description: str = description.lower()
         self.rules: list[Grammar.Rule] = []
         self.tokens_list: list[str] = []
 
@@ -49,7 +60,6 @@ class Grammar:
         current_rule_name: str = ''
 
         for char in self.description:
-            char.lower()
             match current_state:
                 case 0:
                     if char == '<':
@@ -184,11 +194,55 @@ class Grammar:
         if '' in self.tokens_list:
             self.tokens_list.remove('')
 
-    @property
     def longest_rule_len(self) -> int:
         return max(map(lambda x: len(x.name), self.rules))
 
     def make_list(self) -> list[str]:
         def make_str(n: int, rule: Grammar.Rule) -> str:
-            return str(n).rjust(len(str(len(self.rules)))) + '. ' + rule.make_formatted_str(self.longest_rule_len)
+            return str(n).rjust(len(str(len(self.rules)))) + '. ' + rule.make_formatted_str(self.longest_rule_len())
         return [make_str(i, r) for i, r, in enumerate(self.rules, start=1)]
+
+    def lexer(self, code: str) -> list[Token]:
+        def get_potential_tokens(list_: list[str], current_token_: str) -> list[str]:
+            return [item for item in list_ if item.startswith(current_token_)]
+
+        token_stream: list[Grammar.Token] = []
+        counter: int = 0
+        current_token: str = ''
+        code_length: int = len(code)
+
+        while counter < code_length:
+            if code[counter].isspace():
+                counter += 1
+            elif code[counter].isidentifier():
+                while counter < code_length and (code[counter].isidentifier() or code[counter].isdigit()):
+                    current_token += code[counter]
+                    counter += 1
+                token_stream.append(self.Token(current_token) if current_token in self.tokens_list
+                                    else self.Token('<id>', current_token))
+                current_token = ''
+            elif code[counter].isdigit():
+                while counter < code_length and code[counter].isdigit():
+                    current_token += code[counter]
+                    counter += 1
+                if counter < code_length and code[counter].isalpha():
+                    raise self.LexingException(f"Invalid token: '{current_token + code[counter]}'.")
+                token_stream.append(self.Token('<i_lit>', current_token))
+                current_token = ''
+            else:
+                potential_tokens = get_potential_tokens(self.tokens_list, current_token)
+                while counter < code_length and \
+                        not (code[counter].isidentifier() or code[counter].isdigit() or code[counter].isspace()):
+                    current_token += code[counter]
+                    counter += 1
+                    potential_tokens = get_potential_tokens(potential_tokens, current_token)
+                    if len(potential_tokens) < 1:
+                        raise self.LexingException(f"Invalid token: '{current_token}'.")
+                    if current_token in potential_tokens and \
+                            (counter >= code_length or current_token + code[counter] not in
+                             get_potential_tokens(potential_tokens, current_token + code[counter])):
+                        token_stream.append(self.Token(current_token))
+                        current_token = ''
+                        break
+        token_stream.append(self.Token('<eof>'))
+        return token_stream

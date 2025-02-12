@@ -29,18 +29,10 @@ class Parser:
     tree: Tree | None
     current_node: Tree | None
     parse_stack: list[ParseStackFrame]
-    token_stream: list[Token]
+    token_stream: list[Grammar.Token]
     finished_parsing: bool
     code: list[str]
     last_highlighted_line: int
-
-    class Token:
-        def __init__(self, name: str, image: str = None) -> None:
-            self.name = name
-            self.image = name if image is None else image
-
-        def __str__(self) -> str:
-            return self.image
 
     class ParseStackFrame:
         def __init__(self, node: Tree) -> None:
@@ -55,56 +47,8 @@ class Parser:
         self.grammar = Grammar(description)
         self.generate_rules()
 
-    class LexingException(Exception):
-        pass
-
-    def lexer(self, code: str) -> None:
-        # TODO: replace this with a state machine
-
-        def get_potential_tokens(list_: list[str], current_token_: str) -> list[str]:
-            return [item for item in list_ if item.startswith(current_token_)]
-
-        token_stream: list[Parser.Token] = []
-        counter: int = 0
-        current_token: str = ''
-        code_length: int = len(code)
-
-        while counter < code_length:
-            if code[counter].isspace():
-                counter += 1
-            elif code[counter].isidentifier():
-                while counter < code_length and (code[counter].isidentifier() or code[counter].isdigit()):
-                    current_token += code[counter]
-                    counter += 1
-                token_stream.append(self.Token(current_token) if current_token in self.grammar.tokens_list
-                                    else self.Token('<id>', current_token))
-                current_token = ''
-            elif code[counter].isdigit():
-                while counter < code_length and code[counter].isdigit():
-                    current_token += code[counter]
-                    counter += 1
-                if counter < code_length and code[counter].isalpha():
-                    raise self.LexingException(f"Invalid token: '{current_token + code[counter]}'.")
-                token_stream.append(self.Token('<i_lit>', current_token))
-                current_token = ''
-            else:
-                potential_tokens = get_potential_tokens(self.grammar.tokens_list, current_token)
-                while counter < code_length and \
-                        not (code[counter].isidentifier() or code[counter].isdigit() or code[counter].isspace()):
-                    current_token += code[counter]
-                    counter += 1
-                    potential_tokens = get_potential_tokens(potential_tokens, current_token)
-                    if len(potential_tokens) < 1:
-                        raise self.LexingException(f"Invalid token: '{current_token}'.")
-                    if current_token in potential_tokens and \
-                            (counter >= code_length or current_token + code[counter] not in
-                             get_potential_tokens(potential_tokens, current_token + code[counter])):
-                        token_stream.append(self.Token(current_token))
-                        current_token = ''
-                        break
-
-        token_stream.append(self.Token('<eof>'))
-        self.token_stream = token_stream
+    def new_code(self, code: str) -> None:
+        self.token_stream = self.grammar.lexer(code)
 
     def reset(self) -> None: ...
 
