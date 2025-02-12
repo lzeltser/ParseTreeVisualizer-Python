@@ -23,8 +23,11 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from GraphicsSettings import GraphicsSettings
 from Grid import Grid
-from Parser import Parser, TableDrivenParser, LLRecursiveDescentParser, LLTableDrivenParser, LRTableDrivenParser
+from LL1RecursiveDescentParser import LL1RecursiveDescentParser
+from LL1TableParser import LL1TableParser
+from Parser import Parser, TableParser
 import HTML
+from SLRTableParser import SLRTableParser
 from Tree import Tree
 from Ui_Window import Ui_MainWindow
 
@@ -58,7 +61,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.currently_running: bool = False
         self.thread_pool: QtCore.QThreadPool = QtCore.QThreadPool()
 
-        self.parsers: list[Parser] = [LLRecursiveDescentParser(), LLTableDrivenParser(), LRTableDrivenParser()]
+        self.parsers: list[Parser] = [LL1RecursiveDescentParser(), LL1TableParser(), SLRTableParser()]
         with open("../Grammars/Calculator-LL.gr", 'r') as f:
             self.parsers[0].input_grammar(f.read())
         with open("../Grammars/Calculator-LL.gr", 'r') as f:
@@ -136,7 +139,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.double_hl_cell_brush = QtGui.QBrush(QtGui.QColor(0xAA, 0xAA, 0xAA))
 
     def recursive_descent_code_changed(self) -> None:
-        if isinstance(self.current_parser, LLRecursiveDescentParser):
+        if isinstance(self.current_parser, LL1RecursiveDescentParser):
             self.current_parser.update_code(self.RDCodeSelectBox.currentIndex())
             self.update_code_display()
 
@@ -193,7 +196,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         pass
 
     def using_table_driven_parser(self) -> bool:
-        return isinstance(self.current_parser, TableDrivenParser)
+        return isinstance(self.current_parser, TableParser)
 
     def update_grammar(self, new_grammar: str) -> None:
         try:
@@ -305,7 +308,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
     def update_table_display(self) -> None:
-        assert isinstance(self.current_parser, TableDrivenParser)
+        assert isinstance(self.current_parser, TableParser)
         self.TableBox.clear()
         self.TableBox.setRowCount(self.current_parser.table_height())
         self.TableBox.setColumnCount(self.current_parser.table_width())
