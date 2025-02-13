@@ -52,13 +52,13 @@ class LL1TableParser(Parser, TableParser):
     def table_width(self) -> int:
         return len(self.table[0])
 
-    def table_top_row(self) -> Iterable[str]:
+    def get_table_top_row(self) -> Iterable[str]:
         return self.ll_token_list
 
-    def table_left_col(self) -> Iterable[str]:
+    def get_table_left_col(self) -> Iterable[str]:
         return self.ll_rule_list
 
-    def get_table(self) -> Iterable[Iterable[str]]:
+    def get_table_body(self) -> Iterable[Iterable[str]]:
         return [['' if i < 0 else str(i) for i in row] for row in self.table]
 
     def push_rules_to_stack(self, rules: list[LLTableRule]) -> None:

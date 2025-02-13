@@ -44,7 +44,7 @@ class Grammar:
         def __str__(self) -> str:
             return self.image
 
-    class GrammarParsingError(Exception):
+    class GrammarParsingException(Exception):
         pass
 
     class LexingException(Exception):
@@ -68,13 +68,13 @@ class Grammar:
                     elif char.isspace():
                         pass
                     else:
-                        raise self.GrammarParsingError("All rules must start with '<'.")
+                        raise self.GrammarParsingException("All rules must start with '<'.")
                 case 1:
                     if char.isalpha() or char.isdigit() or char == '-' or char == '_':
                         current_string += char
                         current_state = 2
                     else:
-                        raise self.GrammarParsingError("Symbols can only have letters, numbers, '_', or '-'.")
+                        raise self.GrammarParsingException("Symbols can only have letters, numbers, '_', or '-'.")
                 case 2:
                     if char.isalpha() or char.isdigit() or char == '-' or char == '_':
                         current_string += char
@@ -84,24 +84,24 @@ class Grammar:
                         self.rules.append(Grammar.Rule(current_rule_name))
                         current_state = 3
                     else:
-                        raise self.GrammarParsingError("Symbols can only have letters, numbers, '_', or '-'.")
+                        raise self.GrammarParsingException("Symbols can only have letters, numbers, '_', or '-'.")
                 case 3:
                     if char == ':':
                         current_state = 4
                     elif char.isspace() and char != '\n':
                         pass
                     else:
-                        raise self.GrammarParsingError("First symbol most be followed by '::='")
+                        raise self.GrammarParsingException("First symbol most be followed by '::='")
                 case 4:
                     if char == ':':
                         current_state = 5
                     else:
-                        raise self.GrammarParsingError("First symbol most be followed by '::='")
+                        raise self.GrammarParsingException("First symbol most be followed by '::='")
                 case 5:
                     if char == '=':
                         current_state = 6
                     else:
-                        raise self.GrammarParsingError("First symbol most be followed by '::='")
+                        raise self.GrammarParsingException("First symbol most be followed by '::='")
                 case 6:
                     if char == '<':
                         current_string = ''
@@ -112,13 +112,13 @@ class Grammar:
                     elif char.isspace() and char != '\n':
                         pass
                     else:
-                        raise self.GrammarParsingError("Symbol must begin with '<' or '\"'")
+                        raise self.GrammarParsingException("Symbol must begin with '<' or '\"'")
                 case 7:
                     if char.isalpha() or char.isdigit() or char == '-' or char == '_':
                         current_string += char
                         current_state = 8
                     else:
-                        raise self.GrammarParsingError("Symbols can only have letters, numbers, '_', or '-'.")
+                        raise self.GrammarParsingException("Symbols can only have letters, numbers, '_', or '-'.")
                 case 8:
                     if char.isalpha() or char.isdigit() or char == '-' or char == '_':
                         current_string += char
@@ -127,7 +127,7 @@ class Grammar:
                         self.rules[-1].rules.append(Grammar.Item(current_string, False))
                         current_state = 9
                     else:
-                        raise self.GrammarParsingError("Symbols can only have letters, numbers, '_', or '-'.")
+                        raise self.GrammarParsingException("Symbols can only have letters, numbers, '_', or '-'.")
                 case 9:
                     if char == '<':
                         current_string = ''
@@ -145,10 +145,10 @@ class Grammar:
                     elif char == ';':
                         current_state = 12
                     else:
-                        raise self.GrammarParsingError("Symbol must begin with '<' or '\"'")
+                        raise self.GrammarParsingException("Symbol must begin with '<' or '\"'")
                 case 10:
                     if char == '\n':
-                        raise self.GrammarParsingError("Symbol definition incomplete")
+                        raise self.GrammarParsingException("Symbol definition incomplete")
                     elif char == '\\':
                         current_state = 11
                     elif char == '"':
@@ -183,12 +183,12 @@ class Grammar:
                     elif char == ';':
                         current_state = 12
                     else:
-                        raise self.GrammarParsingError("Symbol following literal must begin with '<'")
+                        raise self.GrammarParsingException("Symbol following literal must begin with '<'")
                 case _:
-                    raise self.GrammarParsingError("Something went wrong.")
+                    raise self.GrammarParsingException("Something went wrong.")
 
         if current_state != 0 and current_state != 9 and current_state != 13:
-            raise self.GrammarParsingError("Grammar definition is incomplete")
+            raise self.GrammarParsingException("Grammar definition is incomplete")
 
         self.tokens_list = list(set(self.tokens_list))
         if '' in self.tokens_list:

@@ -67,13 +67,13 @@ class SLRTableParser(Parser, TableParser):
     def table_width(self) -> int:
         return len(self.table[0])
 
-    def table_top_row(self) -> Iterable[str]:
+    def get_table_top_row(self) -> Iterable[str]:
         return self.lr_symbol_list
 
-    def table_left_col(self) -> Iterable[str]:
+    def get_table_left_col(self) -> Iterable[str]:
         return map(str, range(len(self.table)))
 
-    def get_table(self) -> Iterable[Iterable[str]]:
+    def get_table_body(self) -> Iterable[Iterable[str]]:
         return [['' if str(i) == '-1' else str(i) for i in row] for row in self.table]
 
     def code_box_code_to_str(self) -> str:
@@ -139,8 +139,8 @@ class SLRTableParser(Parser, TableParser):
     def step(self) -> None:
         self.curr_highlighted_line = -1
         if len(self.parse_stack) < 1:
-            self.tree = self.current_node = Tree("")
-            self.parse_stack.append(self.LRStackFrame(self.tree, "", 0))
+            self.tree = self.current_node = Tree('')
+            self.parse_stack.append(self.LRStackFrame(self.tree, '', 0))
         elif self.token_stream[0].name == self.lr_production_list[1].left_side and self.parse_stack[-1].state == 0:
             self.curr_highlighted_row = self.curr_highlighted_col = -1
             self.current_node = self.tree[0]

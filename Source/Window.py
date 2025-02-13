@@ -144,7 +144,13 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.update_code_display()
 
     def grammar_update_button_pressed(self) -> None:
-        self.update_grammar(self.GrammarEditBox.toPlainText())
+        try:
+            self.current_parser.input_grammar(self.GrammarEditBox.toPlainText())
+        except Exception as e:
+            # TODO: raise a dialogue box
+            raise e
+        else:
+            self.reset()
 
     def grammar_import_button_pressed(self) -> None:
         # TODO: import grammar from a file
@@ -185,7 +191,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.reset()
 
     def code_update_button_pressed(self) -> None:
-        self.update_code(self.CodeEditBox.toPlainText())
+        try:
+            self.current_parser.new_code(self.CodeEditBox.toPlainText())
+        except Exception as e:
+            # TODO: raise a dialogue box
+            raise e
+        else:
+            self.code = self.CodeEditBox.toPlainText()
+            self.reset()
 
     def code_import_button_pressed(self) -> None:
         # TODO update code from file
@@ -197,25 +210,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def using_table_driven_parser(self) -> bool:
         return isinstance(self.current_parser, TableParser)
-
-    def update_grammar(self, new_grammar: str) -> None:
-        try:
-            self.current_parser.input_grammar(new_grammar)
-        except self.current_parser.grammar.GrammarParsingError as e:
-            # TODO: raise a dialogue box
-            raise e
-        else:
-            self.reset()
-
-    def update_code(self, new_code: str) -> None:
-        try:
-            self.current_parser.new_code(new_code)
-        except self.current_parser.grammar.LexingException as e:
-            # TODO: raise a dialogue box
-            raise e
-        else:
-            self.code = new_code
-            self.reset()
 
     def reset(self) -> None:
         self.current_parser.reset()
@@ -313,7 +307,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TableBox.setRowCount(self.current_parser.table_height())
         self.TableBox.setColumnCount(self.current_parser.table_width())
 
-        for i, item in enumerate(self.current_parser.table_top_row()):
+        for i, item in enumerate(self.current_parser.get_table_top_row()):
             self.TableBox.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
 
             cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
@@ -322,14 +316,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             cell.setForeground(self.text_header_brush)
             self.TableBox.setHorizontalHeaderItem(i, cell)
 
-        for i, item in enumerate(self.current_parser.table_left_col()):
+        for i, item in enumerate(self.current_parser.get_table_left_col()):
             cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
             cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             cell.setBackground(self.hl_header_brush if i == self.current_parser.curr_highlighted_row else self.header_brush)
             cell.setForeground(self.text_header_brush)
             self.TableBox.setVerticalHeaderItem(i, cell)
 
-        for r, row in enumerate(self.current_parser.get_table()):
+        for r, row in enumerate(self.current_parser.get_table_body()):
             for c, item in enumerate(row):
                 cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(item)
                 cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
