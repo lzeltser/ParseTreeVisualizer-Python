@@ -25,7 +25,7 @@ from GraphicsSettings import GraphicsSettings
 from Grid import Grid
 from LL1RecursiveDescentParser import LL1RecursiveDescentParser
 from LL1TableParser import LL1TableParser
-from Parser import Parser, TableParser
+from Parser import Parser, UsesTable
 import HTML
 from SLRTableParser import SLRTableParser
 from Tree import Tree
@@ -82,7 +82,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Set up GUI stuff
         self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
-        self.CodeBox.setHtml(self.current_parser.code_box_code_to_str())
+        self.CodeBox.setHtml(self.current_parser.code_box_text())
         self.CodeEditBox.setPlainText(self.code)
         self.TableBox.setShowGrid(True)  # TODO: add this to settings, make new graphics settings class for Table maybe
         self.TableBox.hide()
@@ -209,7 +209,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         pass
 
     def using_table_driven_parser(self) -> bool:
-        return isinstance(self.current_parser, TableParser)
+        return isinstance(self.current_parser, UsesTable)
 
     def reset(self) -> None:
         self.current_parser.reset()
@@ -294,7 +294,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TreeView.update()
 
     def update_code_display(self) -> None:
-        self.CodeBox.setHtml(self.current_parser.code_box_code_to_str())
+        self.CodeBox.setHtml(self.current_parser.code_box_text())
         self.move_scroll_bar(
             self.CodeBox.verticalScrollBar(),
             self.current_parser.last_highlighted_line,
@@ -302,7 +302,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
     def update_table_display(self) -> None:
-        assert isinstance(self.current_parser, TableParser)
+        assert isinstance(self.current_parser, UsesTable)
         self.TableBox.clear()
         self.TableBox.setRowCount(self.current_parser.table_height())
         self.TableBox.setColumnCount(self.current_parser.table_width())

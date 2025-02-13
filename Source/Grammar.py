@@ -194,6 +194,9 @@ class Grammar:
         if '' in self.tokens_list:
             self.tokens_list.remove('')
 
+    def __len__(self):
+        return len(self.rules)
+
     def longest_rule_len(self) -> int:
         return max(map(lambda x: len(x.name), self.rules))
 

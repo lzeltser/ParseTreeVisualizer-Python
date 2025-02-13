@@ -19,13 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from collections.abc import Iterable
 
-import HTML
-from Parser import Parser, TableParser
+from Parser import Parser, UsesTable, WritesGrammar
 from Tree import Tree
 
 
-class LL1TableParser(Parser, TableParser):
-    curr_highlighted_line: int
+class LL1TableParser(Parser, UsesTable, WritesGrammar):
     parse_stack: list[LLStackFrame]
     ll_table_rules: list[list[LLTableRule]]
 
@@ -67,11 +65,11 @@ class LL1TableParser(Parser, TableParser):
                 self.LLStackFrame(self.current_node.add_child(rule.item, 0), rule.terminal, rule.item)
             )
 
-    def code_box_code_to_str(self) -> str:
-        return HTML.Code.make_html(self.grammar.make_list(), self.curr_highlighted_line)
+    def code_box_text(self) -> str:
+        return self.grammar_list()
 
     def lines_of_code(self) -> int:
-        return len(self.grammar.rules) - 1
+        return self.grammar_list_len()
 
     def parse_stack_to_str(self) -> str:
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
@@ -152,7 +150,7 @@ class LL1TableParser(Parser, TableParser):
                     self.finished_parsing = True
                 else:  # rule exists
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
-                    self.curr_highlighted_line = rule_index-1
+                    self.last_highlighted_line = self.curr_highlighted_line = rule_index-1
 
     def reset(self) -> None:
         self.tree = None

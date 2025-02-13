@@ -19,13 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from collections.abc import Iterable
 
-import HTML
-from Parser import Parser, TableParser
+from Parser import Parser, UsesTable, WritesGrammar
 from Tree import Tree
 
 
-class SLRTableParser(Parser, TableParser):
-    curr_highlighted_line: int
+class SLRTableParser(Parser, UsesTable, WritesGrammar):
     parse_stack: list[LRStackFrame]
     table: list[list[LRTableEntry]]
     lr_production_list: list[LRProduction]
@@ -76,11 +74,11 @@ class SLRTableParser(Parser, TableParser):
     def get_table_body(self) -> Iterable[Iterable[str]]:
         return [['' if str(i) == '-1' else str(i) for i in row] for row in self.table]
 
-    def code_box_code_to_str(self) -> str:
-        return HTML.Code.make_html(self.grammar.make_list(), self.curr_highlighted_line)
+    def code_box_text(self) -> str:
+        return self.grammar_list()
 
     def lines_of_code(self) -> int:
-        return len(self.grammar.rules) - 1
+        return self.grammar_list_len()
 
     def parse_stack_to_str(self) -> str:
         return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
@@ -157,7 +155,7 @@ class SLRTableParser(Parser, TableParser):
                     self.tree_is_first_in_token_stream = False
                     self.parse_stack.append(self.LRStackFrame(self.current_node, current_symbol, rule.target))
                 case 'r':  # reduce
-                    self.curr_highlighted_line = rule.target-1
+                    self.last_highlighted_line = self.curr_highlighted_line = rule.target-1
                     production = self.lr_production_list[rule.target]
                     self.token_stream.insert(0, self.grammar.Token(production.left_side))
                     self.tree_is_first_in_token_stream = True
@@ -167,7 +165,7 @@ class SLRTableParser(Parser, TableParser):
                         popped_nodes.insert(0, self.tree.remove_last_child())
                     self.current_node = self.tree.add_child(production.left_side, children_list=popped_nodes)
                 case 'b':  # shift then reduce
-                    self.curr_highlighted_line = rule.target-1
+                    self.last_highlighted_line = self.curr_highlighted_line = rule.target-1
                     self.token_stream.pop(0)
                     production = self.lr_production_list[rule.target]
                     self.token_stream.insert(0, self.grammar.Token(production.left_side))

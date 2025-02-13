@@ -20,11 +20,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from Grammar import Grammar
+import HTML
 from Tree import Tree
 
 
-class Parser:
+class HasGrammar:
     grammar: Grammar
+
+
+class Parser(HasGrammar):
     tree: Tree | None
     current_node: Tree | None
     parse_stack: list[ParseStackFrame]
@@ -49,7 +53,7 @@ class Parser:
     def token_stream_to_str(self) -> str:
         return ' '.join(map(lambda token: token.image, self.token_stream))
 
-    def code_box_code_to_str(self) -> str: ...
+    def code_box_text(self) -> str: ...
     def lines_of_code(self) -> int: ...
     def parse_stack_to_str(self) -> str: ...
 
@@ -58,7 +62,7 @@ class Parser:
     def reset(self) -> None: ...
 
 
-class TableParser:
+class UsesTable:
     curr_highlighted_row: int
     last_highlighted_row: int
     curr_highlighted_col: int
@@ -69,3 +73,13 @@ class TableParser:
     def get_table_top_row(self) -> Iterable[str]: ...
     def get_table_left_col(self) -> Iterable[str]: ...
     def get_table_body(self) -> Iterable[Iterable[str]]: ...
+
+
+class WritesGrammar(HasGrammar):
+    curr_highlighted_line: int
+
+    def grammar_list(self) -> str:
+        return HTML.Code.make_html(self.grammar.make_list(), self.curr_highlighted_line)
+
+    def grammar_list_len(self) -> int:
+        return len(self.grammar) - 1

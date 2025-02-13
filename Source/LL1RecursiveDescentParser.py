@@ -53,7 +53,7 @@ class LL1RecursiveDescentParser(Parser):
         self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
         self.reset()
 
-    def code_box_code_to_str(self) -> str:
+    def code_box_text(self) -> str:
         return HTML.Code.make_html(self.code, self.highlighted_rule.code_line)
 
     def lines_of_code(self) -> int:
