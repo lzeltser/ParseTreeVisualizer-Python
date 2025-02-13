@@ -22,36 +22,37 @@ def add_escape_sequences(text: str) -> str:
 
 
 class StackTrace:
-    html_start: str = r"""<!DOCTYPE HTML>
+    _html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; }
 </style></head><body align="center" style=" font-family:'Segoe UI', sans-serif; font-size:9pt; font-weight:400; font-style:normal;">
 <table border="0" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;" cellspacing="0" cellpadding="0">
 <tr><td><p align="right" style=" color:#00ff00;">"""
-    html_middle: str = r"""</span></p></td><td><p align="left">   """
-    html_end: str = r"""</p></td></tr></table></body></html>"""
+    _html_middle: str = r"""</span></p></td><td><p align="left">   """
+    _html_end: str = r"""</p></td></tr></table></body></html>"""
 
     @classmethod
     def make_html(cls, stack_text: list[str], token_text: list[str]) -> str:
-        return (cls.html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
-                cls.html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + cls.html_end)
+        return (cls._html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
+                cls._html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + cls._html_end)
 
 
 class Code:
-    html_start: str = r"""<!DOCTYPE HTML>
+    _html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; }
 </style></head><body style=" font-family:'Courier New', monospace; font-size:9pt; font-weight:400; font-style:normal;"><p>"""
-    html_end: str = r"""</p></body></html>"""
-    highlight_start: str = r"""<highlight style="background-color:red;">"""
-    highlight_end: str = r""" </highlight>"""
-    highlighted_line: int = -1
+    _html_end: str = r"""</p></body></html>"""
+    _highlight_start: str = r"""<highlight style="background-color:red;">"""
+    _highlight_end: str = r""" </highlight>"""
+    _highlighted_line: int = -1
 
     @classmethod
     def line_to_html(cls, input_: tuple[int, str]) -> str:
-        return (cls.highlight_start + add_escape_sequences(input_[1]) + cls.highlight_end
-                if input_[0] == cls.highlighted_line else add_escape_sequences(input_[1]))
+        return (cls._highlight_start + add_escape_sequences(input_[1]) + cls._highlight_end
+                if input_[0] == cls._highlighted_line else add_escape_sequences(input_[1]))
 
     @classmethod
-    def make_html(cls, text: list[str]) -> str:
-        return cls.html_start + '<br>'.join(map(cls.line_to_html, enumerate(text))) + cls.html_end
+    def make_html(cls, text: list[str], highlighted_line: int) -> str:
+        cls._highlighted_line = highlighted_line
+        return cls._html_start + '<br>'.join(map(cls.line_to_html, enumerate(text))) + cls._html_end

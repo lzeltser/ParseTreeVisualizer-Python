@@ -72,8 +72,8 @@ class TableParser(Parser):
     def get_table(self) -> Iterable[Iterable[str]]: ...
 
     def highlight_line(self, line: int) -> None:
-        self.last_highlighted_line = HTML.Code.highlighted_line = line
+        self.last_highlighted_line = HTML.Code._highlighted_line = line
 
     @staticmethod
     def remove_highlight() -> None:
-        HTML.Code.highlighted_line = -1
+        HTML.Code._highlighted_line = -1
