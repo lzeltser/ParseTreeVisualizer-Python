@@ -25,6 +25,8 @@ from Tree import Tree
 
 
 class LL1RecursiveDescentParser(Parser):
+    start_rule_name: str
+    code: list[str]
     parse_stack: list[RDStackFrame]
     recursive_descent_rules: dict[str, dict[str, list[RDRule]]]
     highlighted_rule: RDRule | None
@@ -45,17 +47,25 @@ class LL1RecursiveDescentParser(Parser):
 
     def __init__(self) -> None:
         self.reset()
-        self.starting_rule: str = ''
-        self.highlighted_rule = None
         self.recursive_descent_rules = {}
-        self.start_rule = self.RDRule('', True)
+        self.highlighted_rule = None
+        self.start_rule = self.RDRule('', False)
         self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
+
+    def code_box_code_to_str(self) -> str:
+        return HTML.Code.make_html(self.code)
+
+    def lines_of_code(self) -> int:
+        return len(self.code) - 1
+
+    def parse_stack_to_str(self) -> str:
+        return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def generate_rules(self) -> None:
         new_recursive_descent_rules = {}
 
         # calculator language rules
-        self.starting_rule = 'program'
+        self.start_rule_name = 'program'
         empty_list = []
         program_rules = [self.RDRule('stmt_list', False), self.RDRule('<eof>', True)]
         new_recursive_descent_rules['program'] = {'<id>': program_rules, 'read': program_rules, 'write': program_rules,
@@ -115,10 +125,10 @@ class LL1RecursiveDescentParser(Parser):
         if len(self.parse_stack) < 1:
             if self.current_node is None:
                 # empty stack: start recursive descent
-                self.tree = self.current_node = Tree(self.starting_rule)
+                self.tree = self.current_node = Tree(self.start_rule_name)
                 self.highlight_line(self.start_rule)
                 self.parse_stack.append(
-                    self.RDStackFrame(self.tree, self.starting_rule, self.token_stream[0].name))
+                    self.RDStackFrame(self.tree, self.start_rule_name, self.token_stream[0].name))
             else:
                 # empty stack: finish recursive descent
                 self.current_node = self.tree
@@ -157,9 +167,6 @@ class LL1RecursiveDescentParser(Parser):
                         self.current_node = self.parse_stack[-1].node.add_child("ERROR")
                         self.finished_parsing = True  # stop the parser
 
-    def parse_stack_to_str(self) -> str:
-        return ' '.join(map(lambda x: x.node.name, self.parse_stack))
-
     def reset(self) -> None:
         self.tree = None
         self.current_node = None
@@ -183,14 +190,14 @@ class LL1RecursiveDescentParser(Parser):
             self.code.append('')
             self.code.append('')
         self.code += language.first_code.split('\n')
-        self.code[-1] += (self.starting_rule + language.end_of_main.split('\n')[0])
+        self.code[-1] += (self.start_rule_name + language.end_of_main.split('\n')[0])
         self.start_rule.code_line = len(self.code) - 1
         self.code += language.end_of_main.split('\n')[1:]
 
         for rule_name, tokens in self.recursive_descent_rules.items():
             self.code.append(
                 language.function_definition_beginning + rule_name + language.function_definition_end +
-                (language.start_symbol_comment if self.starting_rule == rule_name else '')+language.function_last_line)
+                (language.start_symbol_comment if self.start_rule_name == rule_name else '') + language.function_last_line)
             self.code.append(language.switch_beginning)
             steps_text_lists: dict[str, list[str]] = {}
             for token, steps_list in tokens.items():

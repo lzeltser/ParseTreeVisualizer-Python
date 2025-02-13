@@ -82,7 +82,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Set up GUI stuff
         self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
-        self.CodeBox.setHtml(self.current_parser.make_html())
+        self.CodeBox.setHtml(self.current_parser.code_box_code_to_str())
         self.CodeEditBox.setPlainText(self.code)
         self.TableBox.setShowGrid(True)  # TODO: add this to settings, make new graphics settings class for Table maybe
         self.TableBox.hide()
@@ -210,7 +210,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def update_code(self, new_code: str) -> None:
         try:
             self.current_parser.new_code(new_code)
-        except self.current_parser.LexingException as e:
+        except self.current_parser.grammar.LexingException as e:
             # TODO: raise a dialogue box
             raise e
         else:
@@ -300,11 +300,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.TreeView.update()
 
     def update_code_display(self) -> None:
-        self.CodeBox.setHtml(self.current_parser.make_html())
+        self.CodeBox.setHtml(self.current_parser.code_box_code_to_str())
         self.move_scroll_bar(
             self.CodeBox.verticalScrollBar(),
             self.current_parser.last_highlighted_line,
-            len(self.current_parser.code) - 1
+            self.current_parser.lines_of_code()
         )
 
     def update_table_display(self) -> None:

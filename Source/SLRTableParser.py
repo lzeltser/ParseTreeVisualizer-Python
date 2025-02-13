@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from collections.abc import Iterable
 
+import HTML
 from Parser import Parser, TableParser
 from Tree import Tree
 
@@ -73,6 +74,15 @@ class SLRTableParser(TableParser):
 
     def get_table(self) -> Iterable[Iterable[str]]:
         return [['' if str(i) == '-1' else str(i) for i in row] for row in self.table]
+
+    def code_box_code_to_str(self) -> str:
+        return HTML.Code.make_html(self.grammar.make_list())
+
+    def lines_of_code(self) -> int:
+        return len(self.grammar.rules) - 1
+
+    def parse_stack_to_str(self) -> str:
+        return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def generate_rules(self) -> None:
         self.lr_symbol_list = ['stmt_list', 'stmt', 'expr', 'term', 'factor', 'ao', 'mo', '<id>',
@@ -174,9 +184,6 @@ class SLRTableParser(TableParser):
                 case _:  # parse error
                     self.current_node = self.tree.add_child("ERROR")
                     self.finished_parsing = True
-
-    def parse_stack_to_str(self) -> str:
-        return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def reset(self) -> None:
         self.tree = None

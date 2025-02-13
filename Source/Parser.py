@@ -31,7 +31,6 @@ class Parser:
     parse_stack: list[ParseStackFrame]
     token_stream: list[Grammar.Token]
     finished_parsing: bool
-    code: list[str]
     last_highlighted_line: int
 
     class ParseStackFrame:
@@ -46,20 +45,17 @@ class Parser:
         self.token_stream = self.grammar.lexer(code)
 
     def node_on_stack(self, node: Tree) -> bool:
-        for item in self.parse_stack:
-            if node is item.node:
-                return True
-        return False
-
-    def make_html(self) -> str:
-        return HTML.Code.make_html(self.code)
+        return any(map(lambda item: node is item.node, self.parse_stack))
 
     def token_stream_to_str(self) -> str:
         return ' '.join(map(lambda x: x.image, self.token_stream))
 
+    def code_box_code_to_str(self) -> str: ...
+    def lines_of_code(self) -> int: ...
+    def parse_stack_to_str(self) -> str: ...
+
     def generate_rules(self) -> None: ...
     def step(self) -> None: ...
-    def parse_stack_to_str(self) -> str: ...
     def reset(self) -> None: ...
 
 
@@ -74,10 +70,6 @@ class TableParser(Parser):
     def table_top_row(self) -> Iterable[str]: ...
     def table_left_col(self) -> Iterable[str]: ...
     def get_table(self) -> Iterable[Iterable[str]]: ...
-
-    def input_grammar(self, description: str) -> None:
-        super().input_grammar(description)
-        self.code = self.grammar.make_list()
 
     def highlight_line(self, line: int) -> None:
         self.last_highlighted_line = HTML.Code.highlighted_line = line
