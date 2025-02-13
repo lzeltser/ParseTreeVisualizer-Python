@@ -29,8 +29,9 @@ class LL1RecursiveDescentParser(Parser):
     code: list[str]
     parse_stack: list[RDStackFrame]
     recursive_descent_rules: dict[str, dict[str, list[RDRule]]]
-    highlighted_rule: RDRule | None
+    highlighted_rule: RDRule
     start_rule: RDRule
+    no_rule: RDRule
 
     class RDStackFrame(Parser.ParseStackFrame):
         def __init__(self, node: Tree, rule: str, first_token: str) -> None:
@@ -46,11 +47,11 @@ class LL1RecursiveDescentParser(Parser):
             self.code_line: int = -1
 
     def __init__(self) -> None:
-        self.reset()
         self.recursive_descent_rules = {}
-        self.highlighted_rule = None
+        self.highlighted_rule = self.no_rule = self.RDRule('', False)
         self.start_rule = self.RDRule('', False)
         self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
+        self.reset()
 
     def code_box_code_to_str(self) -> str:
         return HTML.Code.make_html(self.code, self.highlighted_rule.code_line)
@@ -237,7 +238,7 @@ class LL1RecursiveDescentParser(Parser):
         self.last_highlighted_line = rule.code_line
 
     def remove_highlight(self) -> None:
-        self.highlighted_rule = None
+        self.highlighted_rule = self.no_rule
 
     def update_code(self, index: int) -> None:
         self.make_code(index)

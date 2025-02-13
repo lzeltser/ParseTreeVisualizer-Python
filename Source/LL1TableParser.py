@@ -24,7 +24,8 @@ from Parser import Parser, TableParser
 from Tree import Tree
 
 
-class LL1TableParser(TableParser):
+class LL1TableParser(Parser, TableParser):
+    curr_highlighted_line: int
     parse_stack: list[LLStackFrame]
     ll_table_rules: list[list[LLTableRule]]
 
@@ -67,7 +68,7 @@ class LL1TableParser(TableParser):
             )
 
     def code_box_code_to_str(self) -> str:
-        return HTML.Code.make_html(self.grammar.make_list())
+        return HTML.Code.make_html(self.grammar.make_list(), self.curr_highlighted_line)
 
     def lines_of_code(self) -> int:
         return len(self.grammar.rules) - 1
@@ -122,7 +123,7 @@ class LL1TableParser(TableParser):
         ]
 
     def step(self) -> None:
-        self.remove_highlight()
+        self.curr_highlighted_line = -1
         if len(self.parse_stack) < 1:
             if self.current_node is None:  # empty stack: push start symbol
                 self.tree = self.current_node = Tree(self.ll_table_rules[0][0].item)
@@ -151,7 +152,7 @@ class LL1TableParser(TableParser):
                     self.finished_parsing = True
                 else:  # rule exists
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
-                    self.highlight_line(rule_index-1)
+                    self.curr_highlighted_line = rule_index-1
 
     def reset(self) -> None:
         self.tree = None
@@ -159,9 +160,9 @@ class LL1TableParser(TableParser):
         self.parse_stack = []
         self.token_stream = []
         self.finished_parsing = False
+        self.curr_highlighted_line = -1
         self.last_highlighted_line = -1
         self.curr_highlighted_row = -1
         self.curr_highlighted_col = -1
         self.last_highlighted_row = -1
         self.last_highlighted_col = -1
-        self.remove_highlight()

@@ -20,7 +20,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from Grammar import Grammar
-import HTML
 from Tree import Tree
 
 
@@ -59,7 +58,7 @@ class Parser:
     def reset(self) -> None: ...
 
 
-class TableParser(Parser):
+class TableParser:
     curr_highlighted_row: int
     last_highlighted_row: int
     curr_highlighted_col: int
@@ -70,10 +69,3 @@ class TableParser(Parser):
     def table_top_row(self) -> Iterable[str]: ...
     def table_left_col(self) -> Iterable[str]: ...
     def get_table(self) -> Iterable[Iterable[str]]: ...
-
-    def highlight_line(self, line: int) -> None:
-        self.last_highlighted_line = HTML.Code._highlighted_line = line
-
-    @staticmethod
-    def remove_highlight() -> None:
-        HTML.Code._highlighted_line = -1
