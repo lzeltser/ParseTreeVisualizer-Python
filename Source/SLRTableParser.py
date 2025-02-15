@@ -24,11 +24,11 @@ from Tree import Tree
 
 
 class SLRTableParser(Parser, UsesTable, WritesGrammar):
-    parse_stack: list[LRStackFrame]
+    parse_stack: list[ParseStackFrame]
     table: list[list[LRTableEntry]]
     lr_production_list: list[LRProduction]
 
-    class LRStackFrame(Parser.ParseStackFrame):
+    class ParseStackFrame(Parser.BaseParseStackFrame):
         def __init__(self, node: Tree, symbol: str, state: int) -> None:
             super().__init__(node)
             self.symbol: str = symbol
@@ -138,7 +138,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         self.curr_highlighted_line = -1
         if len(self.parse_stack) < 1:
             self.tree = self.current_node = Tree('')
-            self.parse_stack.append(self.LRStackFrame(self.tree, '', 0))
+            self.parse_stack.append(self.ParseStackFrame(self.tree, '', 0))
         elif self.token_stream[0].name == self.lr_production_list[1].left_side and self.parse_stack[-1].state == 0:
             self.curr_highlighted_row = self.curr_highlighted_col = -1
             self.current_node = self.tree[0]
@@ -153,7 +153,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
                     self.token_stream.pop(0)
                     self.current_node = self.tree[-1] if self.tree_is_first_in_token_stream else self.tree.add_child(current_symbol)
                     self.tree_is_first_in_token_stream = False
-                    self.parse_stack.append(self.LRStackFrame(self.current_node, current_symbol, rule.target))
+                    self.parse_stack.append(self.ParseStackFrame(self.current_node, current_symbol, rule.target))
                 case 'r':  # reduce
                     self.last_highlighted_line = self.curr_highlighted_line = rule.target-1
                     production = self.lr_production_list[rule.target]

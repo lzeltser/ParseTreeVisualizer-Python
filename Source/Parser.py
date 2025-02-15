@@ -31,12 +31,12 @@ class UsesGrammar:
 class Parser(UsesGrammar):
     tree: Tree | None
     current_node: Tree | None
-    parse_stack: list[ParseStackFrame]
+    parse_stack: list[BaseParseStackFrame]
     token_stream: list[Grammar.Token]
     finished_parsing: bool
     last_highlighted_line: int
 
-    class ParseStackFrame:
+    class BaseParseStackFrame:
         def __init__(self, node: Tree) -> None:
             self.node = node
 

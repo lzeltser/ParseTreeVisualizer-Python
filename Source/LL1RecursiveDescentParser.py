@@ -27,13 +27,13 @@ from Tree import Tree
 class LL1RecursiveDescentParser(Parser):
     start_rule_name: str
     code: list[str]
-    parse_stack: list[RDStackFrame]
+    parse_stack: list[ParseStackFrame]
     recursive_descent_rules: dict[str, dict[str, list[RDRule]]]
     highlighted_rule: RDRule
     start_rule: RDRule
     no_rule: RDRule
 
-    class RDStackFrame(Parser.ParseStackFrame):
+    class ParseStackFrame(Parser.BaseParseStackFrame):
         def __init__(self, node: Tree, rule: str, first_token: str) -> None:
             super().__init__(node)
             self.rule: str = rule
@@ -129,7 +129,7 @@ class LL1RecursiveDescentParser(Parser):
                 self.tree = self.current_node = Tree(self.start_rule_name)
                 self.highlight_line(self.start_rule)
                 self.parse_stack.append(
-                    self.RDStackFrame(self.tree, self.start_rule_name, self.token_stream[0].name))
+                    self.ParseStackFrame(self.tree, self.start_rule_name, self.token_stream[0].name))
             else:
                 # empty stack: finish recursive descent
                 self.current_node = self.tree
@@ -154,7 +154,7 @@ class LL1RecursiveDescentParser(Parser):
                     self.current_node = self.parse_stack[-1].node.add_child(
                         current_rule[self.parse_stack[-1].index].item)
                     self.highlight_line(current_rule[self.parse_stack[-1].index])
-                    self.parse_stack.append(self.RDStackFrame(
+                    self.parse_stack.append(self.ParseStackFrame(
                         self.current_node, current_rule[self.parse_stack[-1].index].item, self.token_stream[0].name))
                 else:
                     # match token rule

@@ -24,10 +24,10 @@ from Tree import Tree
 
 
 class LL1TableParser(Parser, UsesTable, WritesGrammar):
-    parse_stack: list[LLStackFrame]
+    parse_stack: list[ParseStackFrame]
     ll_table_rules: list[list[LLTableRule]]
 
-    class LLStackFrame(Parser.ParseStackFrame):
+    class ParseStackFrame(Parser.BaseParseStackFrame):
         def __init__(self, node: Tree, terminal: bool, rule: str) -> None:
             super().__init__(node)
             self.terminal: bool = terminal
@@ -62,7 +62,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
     def push_rules_to_stack(self, rules: list[LLTableRule]) -> None:
         for rule in reversed(rules):
             self.parse_stack.append(
-                self.LLStackFrame(self.current_node.add_child(rule.item, 0), rule.terminal, rule.item)
+                self.ParseStackFrame(self.current_node.add_child(rule.item, 0), rule.terminal, rule.item)
             )
 
     def code_box_text(self) -> str:
@@ -126,7 +126,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
             if self.current_node is None:  # empty stack: push start symbol
                 self.tree = self.current_node = Tree(self.ll_table_rules[0][0].item)
                 self.parse_stack.append(
-                    self.LLStackFrame(self.tree, self.ll_table_rules[0][0].terminal, self.current_node.name))
+                    self.ParseStackFrame(self.tree, self.ll_table_rules[0][0].terminal, self.current_node.name))
             else:  # empty stack: finish parse
                 self.curr_highlighted_row = self.curr_highlighted_col = self.last_highlighted_row = self.last_highlighted_col = -1
                 self.current_node = self.tree
