@@ -75,7 +75,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         return [['' if str(i) == '-1' else str(i) for i in row] for row in self.table]
 
     def code_box_text(self) -> str:
-        return self.grammar_list()
+        return self.grammar_to_numbered_list()
 
     def lines_of_code(self) -> int:
         return self.grammar_list_len()

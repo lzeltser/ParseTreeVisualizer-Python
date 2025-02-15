@@ -44,7 +44,7 @@ class Parser(UsesGrammar):
         self.grammar = Grammar(description)
         self.generate_rules()
 
-    def new_code(self, code: str) -> None:
+    def input_code(self, code: str) -> None:
         self.token_stream = self.grammar.lexer(code)
 
     def node_on_stack(self, node: Tree) -> bool:
@@ -78,7 +78,7 @@ class UsesTable:
 class WritesGrammar(UsesGrammar):
     curr_highlighted_line: int
 
-    def grammar_list(self) -> str:
+    def grammar_to_numbered_list(self) -> str:
         return HTML.CodeBox.make_html(self.grammar.make_list(), self.curr_highlighted_line)
 
     def grammar_list_len(self) -> int:

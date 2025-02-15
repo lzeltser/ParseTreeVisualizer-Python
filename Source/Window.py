@@ -78,7 +78,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         with open("../ExampleCode/Average.cl", "r") as f:
             self.code: str = f.read()
         self.current_parser: Parser = self.parsers[self.AlgorithmBox.currentIndex()]
-        self.current_parser.new_code(self.code)
+        self.current_parser.input_code(self.code)
 
         # Set up GUI stuff
         self.GrammarEditBox.setPlainText(self.current_parser.grammar.description)
@@ -192,7 +192,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def code_update_button_pressed(self) -> None:
         try:
-            self.current_parser.new_code(self.CodeEditBox.toPlainText())
+            self.current_parser.input_code(self.CodeEditBox.toPlainText())
         except Exception as e:
             # TODO: raise a dialogue box
             raise e
@@ -225,7 +225,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.update_display()
         self.StackDisplay.setHtml('')
         self.enable_run_buttons()
-        self.current_parser.new_code(self.code)
+        self.current_parser.input_code(self.code)
         self.stack_trace_stack_text = []
         self.stack_trace_token_list = []
 
