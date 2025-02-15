@@ -17,11 +17,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-def add_escape_sequences(text: str) -> str:
-    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+class HTML:
+    _line_break: str = r"""<br>"""
+
+    @staticmethod
+    def add_escape_sequences(text: str) -> str:
+        return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-class StackTrace:
+class StackTrace(HTML):
     _html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; }
@@ -33,11 +37,11 @@ p { white-space: pre-wrap; margin-top:0px; margin-bottom:0px; margin-left:0px; m
 
     @classmethod
     def make_html(cls, stack_text: list[str], token_text: list[str]) -> str:
-        return (cls._html_start + '<br>'.join(map(add_escape_sequences, stack_text)) +
-                cls._html_middle + '<br>   '.join(map(add_escape_sequences, token_text)) + cls._html_end)
+        return (cls._html_start + cls._line_break.join(map(cls.add_escape_sequences, stack_text)) + cls._html_middle +
+                (cls._line_break + '   ').join(map(cls.add_escape_sequences, token_text)) + cls._html_end)
 
 
-class Code:
+class CodeBox(HTML):
     _html_start: str = r"""<!DOCTYPE HTML>
 <html><head><meta charset="utf-8" /><style type="text/css">
 p { white-space: pre-wrap; }
@@ -45,14 +49,10 @@ p { white-space: pre-wrap; }
     _html_end: str = r"""</p></body></html>"""
     _highlight_start: str = r"""<highlight style="background-color:red;">"""
     _highlight_end: str = r""" </highlight>"""
-    _highlighted_line: int = -1
-
-    @classmethod
-    def line_to_html(cls, input_: tuple[int, str]) -> str:
-        return (cls._highlight_start + add_escape_sequences(input_[1]) + cls._highlight_end
-                if input_[0] == cls._highlighted_line else add_escape_sequences(input_[1]))
 
     @classmethod
     def make_html(cls, text: list[str], highlighted_line: int) -> str:
-        cls._highlighted_line = highlighted_line
-        return cls._html_start + '<br>'.join(map(cls.line_to_html, enumerate(text))) + cls._html_end
+        def line_to_html(input_: tuple[int, str]) -> str:
+            return (cls._highlight_start + cls.add_escape_sequences(input_[1]) + cls._highlight_end
+                    if input_[0] == highlighted_line else cls.add_escape_sequences(input_[1]))
+        return cls._html_start + cls._line_break.join(map(line_to_html, enumerate(text))) + cls._html_end
