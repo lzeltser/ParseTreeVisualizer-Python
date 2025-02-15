@@ -36,7 +36,8 @@ a programming language and a tree will be built from it
 * Add settings related to displaying the tree
 * Add settings for font size
 * Add a way to zoom in an out from the tree
-* Add more languages for the recursive descent code
+* Add more languages for the recursive descent code (in no particular
+order, OCaml, Java, D, C#, Haskell, Rust, Go, JavaScript, Ada, Ruby)
 
 ## Contact
 For any questions about the project, you can email me at
