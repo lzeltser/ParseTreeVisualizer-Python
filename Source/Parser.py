@@ -24,11 +24,11 @@ import HTML
 from Tree import Tree
 
 
-class HasGrammar:
+class BaseParser:
     grammar: Grammar
 
 
-class Parser(HasGrammar):
+class Parser(BaseParser):
     tree: Tree | None
     current_node: Tree | None
     parse_stack: list[ParseStackFrame]
@@ -75,11 +75,11 @@ class UsesTable:
     def get_table_body(self) -> Iterable[Iterable[str]]: ...
 
 
-class WritesGrammar(HasGrammar):
+class WritesGrammar(BaseParser):
     curr_highlighted_line: int
 
     def grammar_list(self) -> str:
-        return HTML.Code.make_html(self.grammar.make_list(), self.curr_highlighted_line)
+        return HTML.CodeBox.make_html(self.grammar.make_list(), self.curr_highlighted_line)
 
     def grammar_list_len(self) -> int:
         return len(self.grammar) - 1
