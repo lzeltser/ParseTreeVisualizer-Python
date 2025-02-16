@@ -52,7 +52,7 @@ class RDCodeRules:
         self.skip_case: str = ''
         self.switch_default: str = ''  # this will call the parse error and end of statement
 
-        self.function_last_line: str = ''
+        self.function_last_lines: str = ''
 
         self.program_last_statements: str = ''
 
@@ -82,8 +82,7 @@ Pseudocode.call_match_end = ')'
 Pseudocode.end_of_case = ' '
 Pseudocode.skip_case = 3 * INDENT + 'skip  /* epsilon production */'
 Pseudocode.switch_default = INDENT + 'otherwise parse_error'
-Pseudocode.function_last_line = '\n'
-
+Pseudocode.function_last_lines = f"{INDENT}return\n\n"
 C = RDCodeRules('C')
 C.program_first_statements = """#include <stdlib.h>
 
@@ -123,8 +122,8 @@ C.call_match_beginning = 2 * INDENT + 'match('
 C.call_match_end = ');'
 C.end_of_case = 2 * INDENT + 'break;'
 C.skip_case = 2 * INDENT + '// epsilon production'
-C.switch_default = INDENT + f'default:\n{2 * INDENT}error();\n{2 * INDENT}break;\n{INDENT}' + '}\n}'
-C.function_last_line = '\n'
+C.switch_default = INDENT + f'default:\n{2 * INDENT}error();\n{2 * INDENT}break;\n{INDENT}' + '}'
+C.function_last_lines = f"{INDENT}return;\n{'}'}\n\n"
 C.program_last_statements = ''
 
 Python = RDCodeRules('Python')
@@ -152,7 +151,7 @@ Python.call_match_beginning = 3 * INDENT + "match_('"
 Python.call_match_end = "')"
 Python.skip_case = 3 * INDENT + 'pass  /* epsilon production */'
 Python.switch_default = f"{2 * INDENT}case _:\n{3 * INDENT}raise ParseError"
-Python.function_last_line = '\n'
+Python.function_last_lines = f"{INDENT}return\n\n"
 Python.program_last_statements = f"""
 if __name__ == '__main__':
 {INDENT}main()
@@ -161,5 +160,3 @@ if __name__ == '__main__':
 RecursiveDescentCodeLanguages: list[RDCodeRules] = [
     Pseudocode, C, Python
 ]
-
-# TODO: Add OCaml, Java, D, C#, Haskell, Rust, Go, JavaScript, Ada, Ruby
