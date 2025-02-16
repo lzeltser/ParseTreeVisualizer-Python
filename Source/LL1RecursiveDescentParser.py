@@ -52,6 +52,9 @@ class LL1RecursiveDescentParser(Parser):
             self.tokens: list[str] = []
             self.productions: list[LL1RecursiveDescentParser.Production] = []
 
+        def __contains__(self, item: str) -> bool:
+            return item in self.tokens
+
     def __init__(self) -> None:
         self.recursive_descent_rules = {}
         self.highlighted_rule = self.null_rule = self.Production('', False)
