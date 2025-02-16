@@ -231,7 +231,7 @@ class LL1RecursiveDescentParser(Parser):
                     self.code += language.end_of_case.split('\n')
             self.code += language.switch_default.split('\n')
             return_line: int = len(self.code)
-            for _, list_ in tokens.items():  # TODO: maybe this works
+            for _, list_ in tokens.items():
                 list_[-1].code_line = return_line
             self.code += language.function_last_lines.split('\n')
         self.code.pop()
