@@ -20,7 +20,7 @@ from __future__ import annotations
 
 
 class Grammar:
-    class Item:
+    class Production:
         def __init__(self, name: str, terminal: bool) -> None:
             self.name: str = name
             self.terminal: bool = terminal
@@ -29,12 +29,12 @@ class Grammar:
             return f'"{self.name.replace('\n', '\\n')}"' if self.terminal else f'<{self.name}>'
 
     class Rule:  # special cases: <eof>, "" (epsilon), <i_lit> (integer literal), <id> (variable)
-        def __init__(self, name: str, rules: list[Grammar.Item] = None) -> None:
+        def __init__(self, name: str, rules: list[Grammar.Production] = None) -> None:
             self.name: str = name
-            self.rules: list[Grammar.Item] = [] if rules is None else rules
+            self.productions: list[Grammar.Production] = [] if rules is None else rules
 
         def make_formatted_str(self, longest_rule_len: int) -> str:
-            return '<' + self.name + '>' + ' ' * (longest_rule_len - len(self.name)) + ' ::= ' + ' '.join(map(str, self.rules))
+            return '<' + self.name + '>' + ' ' * (longest_rule_len - len(self.name)) + ' ::= ' + ' '.join(map(str, self.productions))
 
     class Token:
         def __init__(self, name: str, image: str = None) -> None:
@@ -124,7 +124,7 @@ class Grammar:
                         current_string += char
                         current_state = 8
                     elif char == '>':
-                        self.rules[-1].rules.append(Grammar.Item(current_string, False))
+                        self.rules[-1].productions.append(Grammar.Production(current_string, False))
                         current_state = 9
                     else:
                         raise self.GrammarParsingException("Symbols can only have letters, numbers, '_', or '-'.")
@@ -152,7 +152,7 @@ class Grammar:
                     elif char == '\\':
                         current_state = 11
                     elif char == '"':
-                        self.rules[-1].rules.append(Grammar.Item(current_string, True))
+                        self.rules[-1].productions.append(Grammar.Production(current_string, True))
                         self.tokens_list.append(current_string)
                         current_state = 13
                     else:

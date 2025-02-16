@@ -28,10 +28,10 @@ class LL1RecursiveDescentParser(Parser):
     start_rule_name: str
     code: list[str]
     parse_stack: list[ParseStackFrame]
-    recursive_descent_rules: dict[str, dict[str, list[RDRule]]]
-    highlighted_rule: RDRule
-    start_rule: RDRule
-    null_rule: RDRule
+    recursive_descent_rules: dict[str, dict[str, list[Production]]]
+    highlighted_rule: Production
+    start_rule: Production
+    null_rule: Production
 
     class ParseStackFrame(Parser.BaseParseStackFrame):
         def __init__(self, node: Tree, rule: str, first_token: str) -> None:
@@ -40,16 +40,22 @@ class LL1RecursiveDescentParser(Parser):
             self.first_token: str = first_token
             self.index: int = 0
 
-    class RDRule:
-        def __init__(self, item: str, terminal: bool) -> None:
-            self.item: str = item
+    class Production:
+        def __init__(self, name: str, terminal: bool) -> None:
+            self.name: str = name
             self.terminal: bool = terminal
             self.code_line: int = -1
 
+    class Rule:
+        def __init__(self, name: str) -> None:
+            self.name = name
+            self.tokens: list[str] = []
+            self.productions: list[LL1RecursiveDescentParser.Production] = []
+
     def __init__(self) -> None:
         self.recursive_descent_rules = {}
-        self.highlighted_rule = self.null_rule = self.RDRule('', False)
-        self.start_rule = self.RDRule('', False)
+        self.highlighted_rule = self.null_rule = self.Production('', False)
+        self.start_rule = self.Production('', False)
         self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
         self.reset()
 
@@ -67,59 +73,59 @@ class LL1RecursiveDescentParser(Parser):
 
         # calculator language rules
         self.start_rule_name = 'program'
-        program_rules = [self.RDRule('stmt_list', False), self.RDRule('<eof>', True), self.RDRule('', False)]
+        program_rules = [self.Production('stmt_list', False), self.Production('<eof>', True), self.Production('', False)]
         new_recursive_descent_rules['program'] = {'<id>': program_rules, 'read': program_rules, 'write': program_rules,
                                                   '<eof>': program_rules, 'if': program_rules, 'while': program_rules}
-        stmt_list_rules = [self.RDRule('stmt', False), self.RDRule('stmt_list', False), self.RDRule('', False)]
+        stmt_list_rules = [self.Production('stmt', False), self.Production('stmt_list', False), self.Production('', False)]
         new_recursive_descent_rules['stmt_list'] = {
             '<id>': stmt_list_rules, 'read': stmt_list_rules, 'write': stmt_list_rules,
-            'if': stmt_list_rules, 'while': stmt_list_rules, 'end': [self.RDRule('', False)], '<eof>': [self.RDRule('', False)]}
+            'if': stmt_list_rules, 'while': stmt_list_rules, 'end': [self.Production('', False)], '<eof>': [self.Production('', False)]}
         new_recursive_descent_rules['stmt'] = {
-            '<id>': [self.RDRule('<id>', True), self.RDRule(':=', True),
-                     self.RDRule('expr', False), self.RDRule('', False)],
-            'read': [self.RDRule('read', True), self.RDRule('<id>', True), self.RDRule('', False)],
-            'write': [self.RDRule('write', True), self.RDRule('expr', False), self.RDRule('', False)],
-            'if': [self.RDRule('if', True), self.RDRule('cond', False),
-                   self.RDRule('stmt_list', False), self.RDRule('end', True), self.RDRule('', False)],
-            'while': [self.RDRule('while', True), self.RDRule('cond', False),
-                      self.RDRule('stmt_list', False), self.RDRule('end', True), self.RDRule('', False)]}
-        cond_rules = [self.RDRule('expr', False), self.RDRule('ro', False),
-                      self.RDRule('expr', False), self.RDRule('', False)]
+            '<id>': [self.Production('<id>', True), self.Production(':=', True),
+                     self.Production('expr', False), self.Production('', False)],
+            'read': [self.Production('read', True), self.Production('<id>', True), self.Production('', False)],
+            'write': [self.Production('write', True), self.Production('expr', False), self.Production('', False)],
+            'if': [self.Production('if', True), self.Production('cond', False),
+                   self.Production('stmt_list', False), self.Production('end', True), self.Production('', False)],
+            'while': [self.Production('while', True), self.Production('cond', False),
+                      self.Production('stmt_list', False), self.Production('end', True), self.Production('', False)]}
+        cond_rules = [self.Production('expr', False), self.Production('ro', False),
+                      self.Production('expr', False), self.Production('', False)]
         new_recursive_descent_rules['cond'] = {'(': cond_rules, '<id>': cond_rules, '<i_lit>': cond_rules}
-        expr_rules = [self.RDRule('term', False), self.RDRule('term_tail', False), self.RDRule('', False)]
+        expr_rules = [self.Production('term', False), self.Production('term_tail', False), self.Production('', False)]
         new_recursive_descent_rules['expr'] = {'(': expr_rules, '<id>': expr_rules, '<i_lit>': expr_rules}
-        term_tail_rules = [self.RDRule('ao', False), self.RDRule('term', False),
-                           self.RDRule('term_tail', False), self.RDRule('', False)]
+        term_tail_rules = [self.Production('ao', False), self.Production('term', False),
+                           self.Production('term_tail', False), self.Production('', False)]
         new_recursive_descent_rules['term_tail'] = {
-            '+': term_tail_rules, '-': term_tail_rules, ')': [self.RDRule('', False)], '<id>': [self.RDRule('', False)],
-            'read': [self.RDRule('', False)], 'write': [self.RDRule('', False)], '<eof>': [self.RDRule('', False)],
-            'if': [self.RDRule('', False)], 'while': [self.RDRule('', False)], 'end': [self.RDRule('', False)],
-            '=': [self.RDRule('', False)], '<>': [self.RDRule('', False)], '<': [self.RDRule('', False)],
-            '>': [self.RDRule('', False)], '<=': [self.RDRule('', False)], '>=': [self.RDRule('', False)]}
-        term_rules = [self.RDRule('factor', False), self.RDRule('factor_tail', False), self.RDRule('', False)]
+            '+': term_tail_rules, '-': term_tail_rules, ')': [self.Production('', False)], '<id>': [self.Production('', False)],
+            'read': [self.Production('', False)], 'write': [self.Production('', False)], '<eof>': [self.Production('', False)],
+            'if': [self.Production('', False)], 'while': [self.Production('', False)], 'end': [self.Production('', False)],
+            '=': [self.Production('', False)], '<>': [self.Production('', False)], '<': [self.Production('', False)],
+            '>': [self.Production('', False)], '<=': [self.Production('', False)], '>=': [self.Production('', False)]}
+        term_rules = [self.Production('factor', False), self.Production('factor_tail', False), self.Production('', False)]
         new_recursive_descent_rules['term'] = {'(': term_rules, '<id>': term_rules, '<i_lit>': term_rules}
-        factor_tail_rules = [self.RDRule('mo', False), self.RDRule('factor', False),
-                             self.RDRule('factor_tail', False), self.RDRule('', False)]
+        factor_tail_rules = [self.Production('mo', False), self.Production('factor', False),
+                             self.Production('factor_tail', False), self.Production('', False)]
         new_recursive_descent_rules['factor_tail'] = {
-            '*': factor_tail_rules, '/': factor_tail_rules, '+': [self.RDRule('', False)],
-            '-': [self.RDRule('', False)], ')': [self.RDRule('', False)], '<id>': [self.RDRule('', False)],
-            'read': [self.RDRule('', False)], 'write': [self.RDRule('', False)], '<eof>': [self.RDRule('', False)],
-            'if': [self.RDRule('', False)], 'while': [self.RDRule('', False)], 'end': [self.RDRule('', False)],
-            '=': [self.RDRule('', False)], '<>': [self.RDRule('', False)], '<': [self.RDRule('', False)],
-            '>': [self.RDRule('', False)], '<=': [self.RDRule('', False)], '>=': [self.RDRule('', False)]}
+            '*': factor_tail_rules, '/': factor_tail_rules, '+': [self.Production('', False)],
+            '-': [self.Production('', False)], ')': [self.Production('', False)], '<id>': [self.Production('', False)],
+            'read': [self.Production('', False)], 'write': [self.Production('', False)], '<eof>': [self.Production('', False)],
+            'if': [self.Production('', False)], 'while': [self.Production('', False)], 'end': [self.Production('', False)],
+            '=': [self.Production('', False)], '<>': [self.Production('', False)], '<': [self.Production('', False)],
+            '>': [self.Production('', False)], '<=': [self.Production('', False)], '>=': [self.Production('', False)]}
         new_recursive_descent_rules['factor'] = {
-            '<i_lit>': [self.RDRule('<i_lit>', True), self.RDRule('', False)],
-            '<id>': [self.RDRule('<id>', True), self.RDRule('', False)],
-            '(': [self.RDRule('(', True), self.RDRule('expr', False),
-                  self.RDRule(')', True), self.RDRule('', False)]}
+            '<i_lit>': [self.Production('<i_lit>', True), self.Production('', False)],
+            '<id>': [self.Production('<id>', True), self.Production('', False)],
+            '(': [self.Production('(', True), self.Production('expr', False),
+                  self.Production(')', True), self.Production('', False)]}
         new_recursive_descent_rules['ro'] = {
-            '=': [self.RDRule('=', True), self.RDRule('', False)], '<>': [self.RDRule('<>', True), self.RDRule('', False)],
-            '<': [self.RDRule('<', True), self.RDRule('', False)], '<=': [self.RDRule('<=', True), self.RDRule('', False)],
-            '>': [self.RDRule('>', True), self.RDRule('', False)], '>=': [self.RDRule('>=', True), self.RDRule('', False)]}
+            '=': [self.Production('=', True), self.Production('', False)], '<>': [self.Production('<>', True), self.Production('', False)],
+            '<': [self.Production('<', True), self.Production('', False)], '<=': [self.Production('<=', True), self.Production('', False)],
+            '>': [self.Production('>', True), self.Production('', False)], '>=': [self.Production('>=', True), self.Production('', False)]}
         new_recursive_descent_rules['ao'] = {
-            '+': [self.RDRule('+', True), self.RDRule('', False)], '-': [self.RDRule('-', True), self.RDRule('', False)]}
+            '+': [self.Production('+', True), self.Production('', False)], '-': [self.Production('-', True), self.Production('', False)]}
         new_recursive_descent_rules['mo'] = {
-            '*': [self.RDRule('*', True), self.RDRule('', False)], '/': [self.RDRule('/', True), self.RDRule('', False)]}
+            '*': [self.Production('*', True), self.Production('', False)], '/': [self.Production('/', True), self.Production('', False)]}
 
         self.recursive_descent_rules = new_recursive_descent_rules
         self.make_code()
@@ -156,13 +162,13 @@ class LL1RecursiveDescentParser(Parser):
                 elif not current_rule[self.parse_stack[-1].index].terminal:
                     # descend rule
                     self.current_node = self.parse_stack[-1].node.add_child(
-                        current_rule[self.parse_stack[-1].index].item)
+                        current_rule[self.parse_stack[-1].index].name)
                     self.highlight_line(current_rule[self.parse_stack[-1].index])
                     self.parse_stack.append(self.ParseStackFrame(
-                        self.current_node, current_rule[self.parse_stack[-1].index].item, self.token_stream[0].name))
+                        self.current_node, current_rule[self.parse_stack[-1].index].name, self.token_stream[0].name))
                 else:
                     # match token rule
-                    if current_rule[self.parse_stack[-1].index].item == self.token_stream[0].name:
+                    if current_rule[self.parse_stack[-1].index].name == self.token_stream[0].name:
                         self.current_node = self.parse_stack[-1].node.add_child(self.token_stream[0].image)
                         self.highlight_line(current_rule[self.parse_stack[-1].index])
                         self.token_stream.pop(0)
@@ -207,7 +213,7 @@ class LL1RecursiveDescentParser(Parser):
             for token, steps_list in tokens.items():
                 steps_text: str = ""
                 for rule in steps_list[:-1]:
-                    item = rule.item
+                    item = rule.name
                     steps_text += ((language.call_function_beginning + item + language.call_function_end if not rule.terminal
                                     else language.call_match_beginning + item + language.call_match_end) + '\n')
                 steps_text = (language.skip_case + '\n') if steps_text == '' else steps_text
@@ -216,7 +222,7 @@ class LL1RecursiveDescentParser(Parser):
                 else:
                     steps_text_lists[steps_text] = [token]
             for steps_list_text, token_list in steps_text_lists.items():
-                rule_text: list[str] = [token.item for token in tokens[token_list[0]]]
+                rule_text: list[str] = [token.name for token in tokens[token_list[0]]]
                 rule_text = ['epsilon'] if rule_text == [] else rule_text
                 self.code += \
                     (language.case_beginning + language.case_separator.join(token_list) + language.case_end +
@@ -239,7 +245,7 @@ class LL1RecursiveDescentParser(Parser):
         if language.program_last_statements != '':
             self.code += language.program_last_statements.split('\n')
 
-    def highlight_line(self, rule: RDRule) -> None:
+    def highlight_line(self, rule: Production) -> None:
         self.highlighted_rule = rule
         self.line_to_move_scrollbar_to = rule.code_line
 
