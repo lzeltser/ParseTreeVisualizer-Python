@@ -150,7 +150,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
                     self.finished_parsing = True
                 else:  # rule exists
                     self.push_rules_to_stack(self.ll_table_rules[rule_index])
-                    self.last_highlighted_line = self.curr_highlighted_line = rule_index-1
+                    self.line_to_move_scrollbar_to = self.curr_highlighted_line = rule_index - 1
 
     def reset(self) -> None:
         self.tree = None
@@ -159,7 +159,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
         self.token_stream = []
         self.finished_parsing = False
         self.curr_highlighted_line = -1
-        self.last_highlighted_line = -1
+        self.line_to_move_scrollbar_to = -1
         self.curr_highlighted_row = -1
         self.curr_highlighted_col = -1
         self.last_highlighted_row = -1

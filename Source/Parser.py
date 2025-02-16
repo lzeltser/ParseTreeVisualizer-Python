@@ -34,7 +34,7 @@ class Parser(UsesGrammar):
     parse_stack: list[BaseParseStackFrame]
     token_stream: list[Grammar.Token]
     finished_parsing: bool
-    last_highlighted_line: int
+    line_to_move_scrollbar_to: int
 
     class BaseParseStackFrame:
         def __init__(self, node: Tree) -> None:

@@ -297,7 +297,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.CodeBox.setHtml(self.current_parser.code_box_text())
         self.move_scroll_bar(
             self.CodeBox.verticalScrollBar(),
-            self.current_parser.last_highlighted_line,
+            self.current_parser.line_to_move_scrollbar_to,
             self.current_parser.lines_of_code()
         )
 
