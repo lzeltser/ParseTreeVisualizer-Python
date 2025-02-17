@@ -7,8 +7,8 @@ Michael L. Scott in his textbook *Programming Language Pragmatics*.
 The program can create a parse tree using LL(1) recursive descent and
 table-driven algorithms as well the SLR algorithm.
 
-The program was my capstone project for my computer science degree at
-UMass Lowell.
+The program was made as a part of my capstone project for my computer
+science degree at UMass Lowell.
 
 ## How to Run
 1) Run 
@@ -20,7 +20,7 @@ in the root folder. You may want to create a virtual environment first.
 
 ## Requirements
 Parse Tree Visualizer has been developed using Python 3.13.1 and only
-tested on this version and a Windows 10 machine.
+tested on this version and on a Windows 10 machine.
 
 ## Known bugs
 
@@ -37,7 +37,8 @@ a programming language and a tree will be built from it
 * Add settings for font size
 * Add a way to zoom in an out from the tree
 * Add more languages for the recursive descent code (in no particular
-order, OCaml, Java, D, C#, Haskell, Rust, Go, JavaScript, Ada, Ruby)
+order, Ada, C#, D, Go, Java, JavaScript, Haskell, OCaml, Ruby, Rust)
+and make them set by config files rather than hard coded
 
 ## Contact
 For any questions about the project, you can email me at
@@ -52,7 +53,7 @@ Parse Tree Visualizer is a port of a Java applet made by Dr. Zerksis
 D. Umrigar.
 
 ## License
-Parse Tree Visualizer is open source and licensed under the GNU Public
-License version 3.
+Parse Tree Visualizer is open source and licensed under the GNU General
+Public License version 3.
 
 Copyright (C) 2024-2025 Leon Zeltser
