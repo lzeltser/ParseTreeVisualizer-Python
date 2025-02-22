@@ -40,6 +40,12 @@ class LL1RecursiveDescentParser(Parser):
             self.rule: LL1RecursiveDescentParser.Rule = rule
             self.index: int = 0
 
+        def current_action(self) -> LL1RecursiveDescentParser.Action:
+            return self.rule[self.index]
+
+        def should_return(self) -> bool:
+            return self.index >= len(self.rule) - 1
+
     class ActionType(IntEnum):
         Descend = auto()
         Match = auto()
@@ -52,12 +58,18 @@ class LL1RecursiveDescentParser(Parser):
             self.code_line: int = -1
 
     class Rule:
-        def __init__(self, tokens: list[str], productions: list[LL1RecursiveDescentParser.Action]) -> None:
+        def __init__(self, tokens: list[str], actions: list[LL1RecursiveDescentParser.Action]) -> None:
             self.tokens: list[str] = tokens
-            self.productions: list[LL1RecursiveDescentParser.Action] = productions
+            self.actions: list[LL1RecursiveDescentParser.Action] = actions
 
         def __contains__(self, item: str) -> bool:
             return item in self.tokens
+        
+        def __getitem__(self, item: int) -> LL1RecursiveDescentParser.Action:
+            return self.actions[item]
+        
+        def __len__(self) -> int:
+            return len(self.actions)
 
     def __init__(self) -> None:
         self.rules = {}
@@ -184,48 +196,19 @@ class LL1RecursiveDescentParser(Parser):
     def step(self) -> None:
         self.remove_highlight()
         if len(self.parse_stack) < 1:
-            if len(self.token_stream) > 0:
-                # empty stack: start recursive descent
-                self.tree = self.current_node = Tree(self.start_symbol_name)
-                self.highlight_line(self.start_rule)
-                self.parse_stack.append(
-                    self.ParseStackFrame(self.tree, self.find_rule(self.start_symbol_name, self.token_stream[0].name)))
-            else:
-                # empty stack: finish recursive descent
-                self.current_node = self.tree
-                self.finished_parsing = True
+            self.start_parse() if self.token_stream else self.finish_parse()
+        elif self.parse_stack[-1].rule is None:
+            self.parse_error()
+        elif self.parse_stack[-1].should_return():
+            self.return_from_function()
         else:
-            current_rule: LL1RecursiveDescentParser.Rule = self.parse_stack[-1].rule
-            if current_rule is None:
-                self.current_node = self.parse_stack[-1].node.add_child("ERROR")
-                self.finished_parsing = True
-            else:
-                if self.parse_stack[-1].index >= len(current_rule.productions) - 1:
-                    # made it to the end of rules list, exit function
-                    self.current_node = self.parse_stack[-1].node
-                    self.highlight_line(current_rule.productions[-1])
-                    self.parse_stack.pop()
-                    if len(self.parse_stack) > 0:
-                        self.parse_stack[-1].index += 1
-                elif current_rule.productions[self.parse_stack[-1].index].action == self.ActionType.Descend:
-                    self.current_node = self.parse_stack[-1].node.add_child(
-                        current_rule.productions[self.parse_stack[-1].index].name)
-                    self.highlight_line(current_rule.productions[self.parse_stack[-1].index])
-                    self.parse_stack.append(self.ParseStackFrame(
-                        self.current_node, self.find_rule(current_rule.productions[self.parse_stack[-1].index].name,
-                                                          self.token_stream[0].name)))
-                elif current_rule.productions[self.parse_stack[-1].index].action == self.ActionType.Match:
-                    if current_rule.productions[self.parse_stack[-1].index].name == self.token_stream[0].name:
-                        self.current_node = self.parse_stack[-1].node.add_child(self.token_stream[0].image)
-                        self.highlight_line(current_rule.productions[self.parse_stack[-1].index])
-                        self.token_stream.pop(0)
-                        self.parse_stack[-1].index += 1
-                    else:
-                        self.current_node = self.parse_stack[-1].node.add_child("ERROR")
-                        self.finished_parsing = True  # stop the parser
-                else:
-                    self.current_node = self.parse_stack[-1].node.add_child("ERROR")
-                    self.finished_parsing = True  # stop the parser
+            match self.parse_stack[-1].current_action().action:
+                case self.ActionType.Descend:
+                    self.descend_to_function()
+                case self.ActionType.Match:
+                    self.match_token()
+                case _:
+                    self.parse_error()
 
     def reset(self) -> None:
         self.tree = None
@@ -240,6 +223,44 @@ class LL1RecursiveDescentParser(Parser):
         for rule in self.rules[current_function]:
             if next_token in rule:
                 return rule
+
+    def start_parse(self) -> None:
+        self.tree = self.current_node = Tree(self.start_symbol_name)
+        self.highlight_line(self.start_rule)
+        self.parse_stack.append(self.ParseStackFrame(
+            self.tree, self.find_rule(self.start_symbol_name, self.token_stream[0].name)
+        ))
+
+    def return_from_function(self) -> None:
+        self.current_node = self.parse_stack[-1].node
+        self.highlight_line(self.parse_stack[-1].rule.actions[-1])
+        self.parse_stack.pop()
+        if self.parse_stack:
+            self.parse_stack[-1].index += 1
+
+    def descend_to_function(self) -> None:
+        self.current_node = self.parse_stack[-1].node.add_child(self.parse_stack[-1].current_action().name)
+        self.highlight_line(self.parse_stack[-1].current_action())
+        self.parse_stack.append(self.ParseStackFrame(
+            self.current_node, self.find_rule(self.parse_stack[-1].current_action().name, self.token_stream[0].name)
+        ))
+
+    def match_token(self) -> None:
+        if self.parse_stack[-1].current_action().name == self.token_stream[0].name:
+            self.current_node = self.parse_stack[-1].node.add_child(self.token_stream[0].image)
+            self.highlight_line(self.parse_stack[-1].current_action())
+            self.token_stream.pop(0)
+            self.parse_stack[-1].index += 1
+        else:
+            self.parse_error()
+
+    def parse_error(self) -> None:
+        self.current_node = self.parse_stack[-1].node.add_child("ERROR")
+        self.finished_parsing = True
+
+    def finish_parse(self) -> None:
+        self.current_node = self.tree
+        self.finished_parsing = True
 
     def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
         language: RDCodeRules.RDCodeRules = self.languages[language_index]
@@ -266,18 +287,18 @@ class LL1RecursiveDescentParser(Parser):
             self.code.append(language.switch_beginning)
 
             for rule in rules:
-                rule_text: list[str] = [production.name for production in rule.productions]
+                rule_text: list[str] = [production.name for production in rule.actions]
                 rule_text = ['epsilon'] if rule_text == [] else rule_text
                 self.code += \
                     (language.case_beginning + language.case_separator.join(rule.tokens) + language.case_end +
                      f"{language.comment_begin}P{rule_counter}: {rule_name} -> "
                      f"{' '.join(rule_text)}{language.comment_end}").split('\n')
                 rule_counter += 1
-                for i, production in enumerate(rule.productions):
+                for i, production in enumerate(rule.actions):
                     production.code_line = i + len(self.code)
 
                 steps_text: str = ''
-                for production in rule.productions[:-1]:
+                for production in rule.actions[:-1]:
                     steps_text += ((language.call_function_beginning + production.name + language.call_function_end
                                     if not production.action else
                                     language.call_match_beginning + production.name + language.call_match_end) + '\n')
@@ -287,10 +308,10 @@ class LL1RecursiveDescentParser(Parser):
                 if language.end_of_case != '':
                     self.code += language.end_of_case.split('\n')
 
-            self.code += language.switch_default.split('\n')
+            self.code += language.switch_default_and_end.split('\n')
             return_line: int = len(self.code)
             for rule in rules:
-                rule.productions[-1].code_line = return_line
+                rule.actions[-1].code_line = return_line
 
             self.code += language.function_last_lines.split('\n')
         self.code.pop()
