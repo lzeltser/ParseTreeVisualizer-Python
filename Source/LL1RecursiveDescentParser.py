@@ -75,7 +75,7 @@ class LL1RecursiveDescentParser(Parser):
         self.rules = {}
         self.highlighted_rule = self.null_rule = self.Action('', self.ActionType.Nothing)
         self.start_rule = self.Action('', self.ActionType.Nothing)
-        self.languages: list[RDCodeRules.RDCodeRules] = RDCodeRules.RecursiveDescentCodeLanguages
+        self.languages: list[RDCodeRules.Language] = RDCodeRules.RecursiveDescentCodeLanguages
         self.reset()
 
     def code_box_text(self) -> str:
@@ -263,7 +263,8 @@ class LL1RecursiveDescentParser(Parser):
         self.finished_parsing = True
 
     def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
-        language: RDCodeRules.RDCodeRules = self.languages[language_index]
+        # TODO: figure out how to put this in the Language class
+        language: RDCodeRules.Language = self.languages[language_index]
         rule_counter: int = 1
         self.code = []
 
@@ -308,7 +309,7 @@ class LL1RecursiveDescentParser(Parser):
                 if language.end_of_case != '':
                     self.code += language.end_of_case.split('\n')
 
-            self.code += language.switch_default_and_end.split('\n')
+            self.code += language.switch_default.split('\n')
             return_line: int = len(self.code)
             for rule in rules:
                 rule.actions[-1].code_line = return_line

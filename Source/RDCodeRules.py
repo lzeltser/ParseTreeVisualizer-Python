@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 INDENT: str = ' ' * 4
 
 
-class RDCodeRules:
+class Language:
     def __init__(self, name: str) -> None:
         self.name: str = name
 
@@ -57,7 +57,7 @@ class RDCodeRules:
         self.program_last_statements: str = ''
 
 
-Pseudocode = RDCodeRules('Pseudocode')
+Pseudocode = Language('Pseudocode')
 Pseudocode.first_code = f"""procedure match(expected)
 {INDENT}if input_token = expected then consume_input_token()
 {INDENT}else parse_error
@@ -83,7 +83,7 @@ Pseudocode.end_of_case = ' '
 Pseudocode.skip_case = 3 * INDENT + 'skip  /* epsilon production */'
 Pseudocode.switch_default = INDENT + 'otherwise parse_error'
 Pseudocode.function_last_lines = f"{INDENT}return\n\n"
-C = RDCodeRules('C')
+C = Language('C')
 C.program_first_statements = """#include <stdlib.h>
 
 void match(token);
@@ -126,7 +126,7 @@ C.switch_default = INDENT + f'default:\n{2 * INDENT}error();\n{2 * INDENT}break;
 C.function_last_lines = f"{INDENT}return;\n{'}'}\n\n"
 C.program_last_statements = ''
 
-Python = RDCodeRules('Python')
+Python = Language('Python')
 Python.first_code = f"""def match_(expected):
 {INDENT}if input_token == expected:
 {INDENT * 2} consume(input_token)
@@ -157,6 +157,6 @@ if __name__ == '__main__':
 {INDENT}main()
 """
 
-RecursiveDescentCodeLanguages: list[RDCodeRules] = [
+RecursiveDescentCodeLanguages: list[Language] = [
     Pseudocode, C, Python
 ]
