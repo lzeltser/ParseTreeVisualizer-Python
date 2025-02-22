@@ -67,10 +67,10 @@ class GraphicsSettings:
 
         self.compact_tree = False
 
-        self.stacked_color = (0, 255, 0)
-        self.unstacked_color = (255, 0, 0)
-        self.highlight_color = (255, 255, 0)
-        self.shadow_color = (192, 192, 192)
+        self.stacked_color = (0x00, 0xFF, 0x00)
+        self.unstacked_color = (0xFF, 0x00, 0x00)
+        self.highlight_color = (0xFF, 0xFF, 0x00)
+        self.shadow_color = (0xC0, 0xC0, 0xC0)
 
     def canvas_width(self, grid_width: int) -> float:
         return self.cell_width * (1+grid_width) + self.side_margin
