@@ -83,3 +83,10 @@ class WritesGrammar(UsesGrammar):
 
     def grammar_list_len(self) -> int:
         return len(self.grammar) - 1
+
+
+class LL1Parser(UsesGrammar):
+    def compute_predict_sets(self) -> None:
+        first_set: dict[str, list[str]] = dict.fromkeys(self.grammar.rule_names_list)
+        for entry in first_set:
+            first_set[entry] = []
