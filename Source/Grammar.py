@@ -205,6 +205,10 @@ class Grammar:
             return str(n).rjust(len(str(len(self.rules)))) + '. ' + rule.make_formatted_str(self.longest_rule_len())
         return [make_str(i, r) for i, r, in enumerate(self.rules, start=1)]
 
+    @property
+    def rule_names_list(self) -> list[str]:
+        return list(dict.fromkeys([rule.name for rule in self.rules]))
+
     def lexer(self, code: str) -> list[Token]:
         # TODO: make state machine
 
