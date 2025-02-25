@@ -89,7 +89,10 @@ class LL1RecursiveDescentParser(Parser):
 
     def generate_rules(self) -> None:
         self.start_symbol_name = 'program'
-        self.rules = dict.fromkeys(self.grammar.rule_names_list, [])
+        self.rules = {
+            'program': [], 'stmt_list': [], 'stmt': [], 'cond': [], 'expr': [], 'term_tail': [],
+            'term': [], 'factor_tail': [], 'factor': [], 'ro': [], 'ao': [], 'mo': []
+        }
 
         self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>', 'if', 'while'], [
             self.Action('stmt_list', self.ActionType.Descend), self.Action('<eof>', self.ActionType.Match),
