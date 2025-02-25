@@ -89,7 +89,10 @@ class LL1RecursiveDescentParser(Parser):
 
     def generate_rules(self) -> None:
         self.start_symbol_name = 'program'
-        self.rules = dict.fromkeys(self.grammar.rule_names_list, [])
+        self.rules = {
+            'program': [], 'stmt_list': [], 'stmt': [], 'expr': [], 'term_tail': [],
+            'term': [], 'factor_tail': [], 'factor': [], 'ao': [], 'mo': []
+        }
 
         self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>'], [
             self.Action('stmt_list', self.ActionType.Descend), self.Action('<eof>', self.ActionType.Match),
@@ -120,7 +123,7 @@ class LL1RecursiveDescentParser(Parser):
             self.Action('ao', self.ActionType.Descend), self.Action('term', self.ActionType.Descend),
             self.Action('term_tail', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['term_tail'].append(self.Rule(['<id>', 'read', 'write', '<eof>'],
+        self.rules['term_tail'].append(self.Rule([')', '<id>', 'read', 'write', '<eof>'],
                                                  [self.Action('', self.ActionType.Nothing)]))
         self.rules['term'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('factor', self.ActionType.Descend), self.Action('factor_tail', self.ActionType.Descend),
@@ -139,7 +142,7 @@ class LL1RecursiveDescentParser(Parser):
             self.Action('<id>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
         ]))
         self.rules['factor'].append(self.Rule(['('], [
-            self.Action('(', self.ActionType.Match), self.Action('<expr>', self.ActionType.Descend),
+            self.Action('(', self.ActionType.Match), self.Action('expr', self.ActionType.Descend),
             self.Action(')', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
         ]))
         self.rules['ao'].append(self.Rule(['+'], [
