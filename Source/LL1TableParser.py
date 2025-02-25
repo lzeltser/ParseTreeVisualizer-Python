@@ -75,23 +75,20 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def generate_rules(self) -> None:
-        self.ll_rule_list = ['program', 'stmt_list', 'stmt', 'cond', 'expr', 'term_tail',
-                             'term', 'factor_tail', 'factor', 'ro', 'ao', 'mo']
-        self.ll_token_list = ['<id>', '<i_lit>', 'read', 'write', 'if', 'while', 'end', ':=', '(',
-                              ')', '+', '-', '*', '/', '=', '<>', '<', '<=', '>', '>=', '<eof>']
+        self.ll_rule_list = ['program', 'stmt_list', 'stmt', 'expr', 'term_tail',
+                             'term', 'factor_tail', 'factor', 'ao', 'mo']
+        self.ll_token_list = ['<id>', '<i_lit>', 'read', 'write', ':=', '(', ')', '+', '-', '*', '/', '<eof>']
         self.table = [
-            [+1, -1,  1,  1,  1,  1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , 1],
-            [+2, -1,  2,  2,  2,  2,  3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  3],
-            [+4, -1,  5,  6,  7,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [+9,  9, -1, -1, -1, -1, -1, -1,  9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [10, 10, -1, -1, -1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [12, -1, 12, 12, 12, 12, 12, -1, -1, 12, 11, 11, -1, -1, 12, 12, 12, 12, 12, 12, 12],
-            [13, 13, -1, -1, -1, -1, -1, -1, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [15, -1, 15, 15, 15, 15, 15, -1, -1, 15, 15, 15, 14, 14, 15, 15, 15, 15, 15, 15, 15],
-            [17, 16, -1, -1, -1, -1, -1, -1, 18, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 25, 26, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 27, 28, -1, -1, -1, -1, -1, -1, -1]
+            [+1, -1,  1,  1, -1, -1, -1, -1, -1, -1, -1,  1],
+            [+2, -1,  2,  2, -1, -1, -1, -1, -1, -1, -1,  3],
+            [+4, -1,  5,  6, -1, -1, -1, -1, -1, -1, -1, -1],
+            [+7,  7, -1, -1, -1,  7, -1, -1, -1, -1, -1, -1],
+            [+9, -1,  9,  9, -1, -1,  9,  8,  8, -1, -1,  9],
+            [10, 10, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1],
+            [12, -1, 12, 12, -1, -1, 12, 12, 12, 11, 11, 12],
+            [14, 15, -1, -1, -1, 13, -1, -1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1, -1, 16, 17, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1, -1, -1, -1, 18, 19, -1]
         ]
         self.ll_table_rules = [
             [self.LLTableRule(False, 'program')],
@@ -101,21 +98,14 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar):
             [self.LLTableRule(True, '<id>'), self.LLTableRule(True, ':='), self.LLTableRule(False, 'expr')],
             [self.LLTableRule(True, 'read'), self.LLTableRule(True, '<id>')],
             [self.LLTableRule(True, 'write'), self.LLTableRule(False, 'expr')],
-            [self.LLTableRule(True, 'if'), self.LLTableRule(False, 'cond'),
-             self.LLTableRule(False, 'stmt_list'), self.LLTableRule(True, 'end')],
-            [self.LLTableRule(True, 'while'), self.LLTableRule(False, 'cond'),
-             self.LLTableRule(False, 'stmt_list'), self.LLTableRule(True, 'end')],
-            [self.LLTableRule(False, 'expr'), self.LLTableRule(False, 'ro'), self.LLTableRule(False, 'expr')],
             [self.LLTableRule(False, 'term'), self.LLTableRule(False, 'term_tail')],
             [self.LLTableRule(False, 'ao'), self.LLTableRule(False, 'term'), self.LLTableRule(False, 'term_tail')],
             [],
             [self.LLTableRule(False, 'factor'), self.LLTableRule(False, 'factor_tail')],
             [self.LLTableRule(False, 'mo'), self.LLTableRule(False, 'factor'), self.LLTableRule(False, 'factor_tail')],
             [],
-            [self.LLTableRule(True, '<i_lit>')], [self.LLTableRule(True, '<id>')],
             [self.LLTableRule(True, '('), self.LLTableRule(False, 'expr'), self.LLTableRule(True, ')')],
-            [self.LLTableRule(True, '=')], [self.LLTableRule(True, '<>')], [self.LLTableRule(True, '<')],
-            [self.LLTableRule(True, '<=')], [self.LLTableRule(True, '>')], [self.LLTableRule(True, '>=')],
+            [self.LLTableRule(True, '<id>')], [self.LLTableRule(True, '<i_lit>')],
             [self.LLTableRule(True, '+')], [self.LLTableRule(True, '-')],
             [self.LLTableRule(True, '*')], [self.LLTableRule(True, '/')]
         ]

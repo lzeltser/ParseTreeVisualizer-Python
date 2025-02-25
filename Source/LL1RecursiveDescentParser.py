@@ -91,15 +91,15 @@ class LL1RecursiveDescentParser(Parser):
         self.start_symbol_name = 'program'
         self.rules = dict.fromkeys(self.grammar.rule_names_list, [])
 
-        self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>', 'if', 'while'], [
+        self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>'], [
             self.Action('stmt_list', self.ActionType.Descend), self.Action('<eof>', self.ActionType.Match),
             self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['stmt_list'].append(self.Rule(['<id>', 'read', 'write', 'if', 'while'], [
+        self.rules['stmt_list'].append(self.Rule(['<id>', 'read', 'write'], [
             self.Action('stmt', self.ActionType.Descend), self.Action('stmt_list', self.ActionType.Descend),
             self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['stmt_list'].append(self.Rule(['end', '<eof>'], [self.Action('', self.ActionType.Nothing)]))
+        self.rules['stmt_list'].append(self.Rule(['<eof>'], [self.Action('', self.ActionType.Nothing)]))
         self.rules['stmt'].append(self.Rule(['<id>'], [
             self.Action('<id>', self.ActionType.Match), self.Action(':=', self.ActionType.Match),
             self.Action('expr', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
@@ -112,21 +112,6 @@ class LL1RecursiveDescentParser(Parser):
             self.Action('write', self.ActionType.Match), self.Action('expr', self.ActionType.Descend),
             self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['stmt'].append(self.Rule(['if'], [
-            self.Action('if', self.ActionType.Match), self.Action('cond', self.ActionType.Descend),
-            self.Action('stmt_list', self.ActionType.Descend), self.Action('end', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['stmt'].append(self.Rule(['while'], [
-            self.Action('while', self.ActionType.Match), self.Action('cond', self.ActionType.Descend),
-            self.Action('stmt_list', self.ActionType.Descend), self.Action('end', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['cond'].append(self.Rule(['(', '<id>', '<i_lit>'], [
-            self.Action('expr', self.ActionType.Descend), self.Action('ro', self.ActionType.Descend),
-            self.Action('expr', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
-        ]))
         self.rules['expr'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('term', self.ActionType.Descend), self.Action('term_tail', self.ActionType.Descend),
             self.Action('', self.ActionType.Nothing)
@@ -135,8 +120,8 @@ class LL1RecursiveDescentParser(Parser):
             self.Action('ao', self.ActionType.Descend), self.Action('term', self.ActionType.Descend),
             self.Action('term_tail', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['term_tail'].append(self.Rule(['<id>', 'read', 'write', '<eof>', 'if', 'while', 'end', '=', '<>',
-                                                  '<', '>', '<=', '>='], [self.Action('', self.ActionType.Nothing)]))
+        self.rules['term_tail'].append(self.Rule(['<id>', 'read', 'write', '<eof>'],
+                                                 [self.Action('', self.ActionType.Nothing)]))
         self.rules['term'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('factor', self.ActionType.Descend), self.Action('factor_tail', self.ActionType.Descend),
             self.Action('', self.ActionType.Nothing)
@@ -145,8 +130,7 @@ class LL1RecursiveDescentParser(Parser):
             self.Action('mo', self.ActionType.Descend), self.Action('factor', self.ActionType.Descend),
             self.Action('factor_tail', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
         ]))
-        self.rules['factor_tail'].append(self.Rule(['+', '-', ')', '<id>', 'read', 'write', '<eof>', 'if',
-                                                    'while', 'end', '=', '<>', '<', '>', '<=', '>='],
+        self.rules['factor_tail'].append(self.Rule(['+', '-', ')', '<id>', 'read', 'write', '<eof>'],
                                                    [self.Action('', self.ActionType.Nothing)]))
         self.rules['factor'].append(self.Rule(['<i_lit>'], [
             self.Action('<i_lit>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
@@ -157,24 +141,6 @@ class LL1RecursiveDescentParser(Parser):
         self.rules['factor'].append(self.Rule(['('], [
             self.Action('(', self.ActionType.Match), self.Action('<expr>', self.ActionType.Descend),
             self.Action(')', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['='], [
-            self.Action('=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['<>'], [
-            self.Action('<>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['<'], [
-            self.Action('<', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['<='], [
-            self.Action('<=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['>'], [
-            self.Action('>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
-        ]))
-        self.rules['ro'].append(self.Rule(['>='], [
-            self.Action('>=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
         ]))
         self.rules['ao'].append(self.Rule(['+'], [
             self.Action('+', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
