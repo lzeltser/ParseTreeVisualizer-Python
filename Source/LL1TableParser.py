@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from collections.abc import Iterable
 
-from Parser import Parser, UsesTable, WritesGrammar
+from Parser import Parser, UsesTable, WritesGrammar, LL1Parser
 from Tree import Tree
 
 
-class LL1TableParser(Parser, UsesTable, WritesGrammar):
+class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
     parse_stack: list[ParseStackFrame]
     ll_table_rules: list[list[LLTableRule]]
 

@@ -21,11 +21,11 @@ from enum import IntEnum, auto
 
 import HTML
 import RDCodeRules
-from Parser import Parser
+from Parser import Parser, LL1Parser
 from Tree import Tree
 
 
-class LL1RecursiveDescentParser(Parser):
+class LL1RecursiveDescentParser(Parser, LL1Parser):
     start_symbol_name: str
     code: list[str]
     parse_stack: list[ParseStackFrame]
@@ -89,10 +89,9 @@ class LL1RecursiveDescentParser(Parser):
 
     def generate_rules(self) -> None:
         self.start_symbol_name = 'program'
-        self.rules = {
-            'program': [], 'stmt_list': [], 'stmt': [], 'cond': [], 'expr': [], 'term_tail': [],
-            'term': [], 'factor_tail': [], 'factor': [], 'ro': [], 'ao': [], 'mo': []
-        }
+        self.rules = dict.fromkeys(self.grammar.rule_names_list)
+        for entry in self.rules:
+            self.rules[entry] = []
 
         self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>', 'if', 'while'], [
             self.Action('stmt_list', self.ActionType.Descend), self.Action('<eof>', self.ActionType.Match),
