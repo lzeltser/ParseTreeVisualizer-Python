@@ -37,19 +37,34 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
     class ParseStackFrame(Parser.BaseParseStackFrame):
         def __init__(self, node: Tree, rule: LL1RecursiveDescentParser.Rule) -> None:
             super().__init__(node)
-            self.rule: LL1RecursiveDescentParser.Rule = rule
-            self.index: int = 0
+            self._rule: LL1RecursiveDescentParser.Rule = rule
+            self._index: int = 0
 
         def current_action(self) -> LL1RecursiveDescentParser.Action:
-            return self.rule[self.index]
+            return self._rule[self._index]
+
+        def should_descend(self) -> bool:
+            return self.current_action().action == LL1RecursiveDescentParser.ActionType.Descend
+
+        def should_match(self) -> bool:
+            return self.current_action().action == LL1RecursiveDescentParser.ActionType.Match
 
         def should_return(self) -> bool:
-            return self.index >= len(self.rule) - 1
+            return self.current_action().action == LL1RecursiveDescentParser.ActionType.Return
+
+        def rule_not_found(self) -> bool:
+            return self._rule is None
+
+        def return_action(self) -> LL1RecursiveDescentParser.Action:
+            return self._rule[-1]
+
+        def increment_index(self) -> None:
+            self._index += 1
 
     class ActionType(IntEnum):
         Descend = auto()
         Match = auto()
-        Nothing = auto()  # for the production at the end of every rule meant to highlight the return line
+        Return = auto()
 
     class Action:
         def __init__(self, name: str, action: LL1RecursiveDescentParser.ActionType) -> None:
@@ -73,8 +88,8 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def __init__(self) -> None:
         self.rules = {}
-        self.highlighted_rule = self.null_rule = self.Action('', self.ActionType.Nothing)
-        self.start_rule = self.Action('', self.ActionType.Nothing)
+        self.highlighted_rule = self.null_rule = self.Action('', self.ActionType.Return)
+        self.start_rule = self.Action('', self.ActionType.Return)
         self.languages: list[RDCodeRules.Language] = RDCodeRules.RecursiveDescentCodeLanguages
         self.reset()
 
@@ -95,100 +110,100 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
         self.rules['program'].append(self.Rule(['<id>', 'read', 'write', '<eof>', 'if', 'while'], [
             self.Action('stmt_list', self.ActionType.Descend), self.Action('<eof>', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['stmt_list'].append(self.Rule(['<id>', 'read', 'write', 'if', 'while'], [
             self.Action('stmt', self.ActionType.Descend), self.Action('stmt_list', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
-        self.rules['stmt_list'].append(self.Rule(['end', '<eof>'], [self.Action('', self.ActionType.Nothing)]))
+        self.rules['stmt_list'].append(self.Rule(['end', '<eof>'], [self.Action('', self.ActionType.Return)]))
         self.rules['stmt'].append(self.Rule(['<id>'], [
             self.Action('<id>', self.ActionType.Match), self.Action(':=', self.ActionType.Match),
-            self.Action('expr', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
+            self.Action('expr', self.ActionType.Descend), self.Action('', self.ActionType.Return)
         ]))
         self.rules['stmt'].append(self.Rule(['read'], [
             self.Action('read', self.ActionType.Match), self.Action('<id>', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['stmt'].append(self.Rule(['write'], [
             self.Action('write', self.ActionType.Match), self.Action('expr', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['stmt'].append(self.Rule(['if'], [
             self.Action('if', self.ActionType.Match), self.Action('cond', self.ActionType.Descend),
             self.Action('stmt_list', self.ActionType.Descend), self.Action('end', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['stmt'].append(self.Rule(['while'], [
             self.Action('while', self.ActionType.Match), self.Action('cond', self.ActionType.Descend),
             self.Action('stmt_list', self.ActionType.Descend), self.Action('end', self.ActionType.Match),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['cond'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('expr', self.ActionType.Descend), self.Action('ro', self.ActionType.Descend),
             self.Action('expr', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['expr'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('term', self.ActionType.Descend), self.Action('term_tail', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['term_tail'].append(self.Rule(['+', '-'], [
             self.Action('ao', self.ActionType.Descend), self.Action('term', self.ActionType.Descend),
-            self.Action('term_tail', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
+            self.Action('term_tail', self.ActionType.Descend), self.Action('', self.ActionType.Return)
         ]))
         self.rules['term_tail'].append(self.Rule([')', '<id>', 'read', 'write', '<eof>', 'if', 'while', 'end', '=', '<>',
-                                                  '<', '>', '<=', '>='], [self.Action('', self.ActionType.Nothing)]))
+                                                  '<', '>', '<=', '>='], [self.Action('', self.ActionType.Return)]))
         self.rules['term'].append(self.Rule(['(', '<id>', '<i_lit>'], [
             self.Action('factor', self.ActionType.Descend), self.Action('factor_tail', self.ActionType.Descend),
-            self.Action('', self.ActionType.Nothing)
+            self.Action('', self.ActionType.Return)
         ]))
         self.rules['factor_tail'].append(self.Rule(['*', '/'], [
             self.Action('mo', self.ActionType.Descend), self.Action('factor', self.ActionType.Descend),
-            self.Action('factor_tail', self.ActionType.Descend), self.Action('', self.ActionType.Nothing)
+            self.Action('factor_tail', self.ActionType.Descend), self.Action('', self.ActionType.Return)
         ]))
         self.rules['factor_tail'].append(self.Rule(['+', '-', ')', '<id>', 'read', 'write', '<eof>', 'if',
                                                     'while', 'end', '=', '<>', '<', '>', '<=', '>='],
-                                                   [self.Action('', self.ActionType.Nothing)]))
+                                                   [self.Action('', self.ActionType.Return)]))
         self.rules['factor'].append(self.Rule(['<i_lit>'], [
-            self.Action('<i_lit>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('<i_lit>', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['factor'].append(self.Rule(['<id>'], [
-            self.Action('<id>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('<id>', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['factor'].append(self.Rule(['('], [
             self.Action('(', self.ActionType.Match), self.Action('expr', self.ActionType.Descend),
-            self.Action(')', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action(')', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['='], [
-            self.Action('=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('=', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['<>'], [
-            self.Action('<>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('<>', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['<'], [
-            self.Action('<', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('<', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['<='], [
-            self.Action('<=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('<=', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['>'], [
-            self.Action('>', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('>', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ro'].append(self.Rule(['>='], [
-            self.Action('>=', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('>=', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ao'].append(self.Rule(['+'], [
-            self.Action('+', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('+', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['ao'].append(self.Rule(['-'], [
-            self.Action('-', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('-', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['mo'].append(self.Rule(['*'], [
-            self.Action('*', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('*', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
         self.rules['mo'].append(self.Rule(['/'], [
-            self.Action('/', self.ActionType.Match), self.Action('', self.ActionType.Nothing)
+            self.Action('/', self.ActionType.Match), self.Action('', self.ActionType.Return)
         ]))
 
         self.make_code()
@@ -196,21 +211,25 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
     def step(self) -> None:
         self.remove_highlight()
         if not self.parse_stack:
-            self.start_parse() if self.token_stream else self.finish_parse()
-        elif self.parse_stack[-1].rule is None:
+            self.start_parse() if self.should_start_or_finish() else self.finish_parse()
+        elif self.parse_stack[-1].rule_not_found():
             self.finish_parse_with_error()
+        elif self.parse_stack[-1].should_descend():
+            self.descend_to_function()
+        elif self.parse_stack[-1].should_match():
+            self.match_token()
         elif self.parse_stack[-1].should_return():
             self.return_from_function()
-        elif self.parse_stack[-1].current_action().action == self.ActionType.Descend:
-            self.descend_to_function()
-        elif self.parse_stack[-1].current_action().action == self.ActionType.Match:
-            self.match_token()
         else:
             self.finish_parse_with_error()
 
     def reset(self) -> None:
         self.reset_parser_attributes()
         self.remove_highlight()
+
+    def should_start_or_finish(self) -> bool:
+        # if token stream is empty finish since there is nothing left to parse, if not start
+        return bool(self.token_stream)
 
     def next_rule(self) -> Rule:
         return next(filter(
@@ -225,10 +244,10 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def return_from_function(self) -> None:
         self.current_node = self.parse_stack[-1].node
-        self.highlight_line(self.parse_stack[-1].rule.actions[-1])
+        self.highlight_line(self.parse_stack[-1].return_action())
         self.parse_stack.pop()
         if self.parse_stack:
-            self.parse_stack[-1].index += 1
+            self.parse_stack[-1].increment_index()
 
     def descend_to_function(self) -> None:
         self.current_node = self.parse_stack[-1].node.add_child(self.parse_stack[-1].current_action().name)
@@ -239,7 +258,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         if self.token_stream[0].name == self.parse_stack[-1].current_action().name:
             self.current_node = self.parse_stack[-1].node.add_child(self.token_stream.pop(0).image)
             self.highlight_line(self.parse_stack[-1].current_action())
-            self.parse_stack[-1].index += 1
+            self.parse_stack[-1].increment_index()
         else:
             self.finish_parse_with_error()
 
@@ -310,9 +329,9 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         if language.program_last_statements != '':
             self.code += language.program_last_statements.split('\n')
 
-    def highlight_line(self, rule: Action) -> None:
-        self.highlighted_rule = rule
-        self.set_scroll_bar_to_index(rule.code_line)
+    def highlight_line(self, action: Action) -> None:
+        self.highlighted_rule = action
+        self.set_scroll_bar_to_index(action.code_line)
 
     def remove_highlight(self) -> None:
         self.highlighted_rule = self.null_rule

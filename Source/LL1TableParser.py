@@ -117,7 +117,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
     def step(self) -> None:
         self.reset_highlighted_line()
         if not self.parse_stack:
-            self.start_parse() if self.token_stream else self.finish_parse()
+            self.start_parse() if self.should_start_or_finish() else self.finish_parse()
         else:
             current_frame: LL1TableParser.ParseStackFrame = self.parse_stack.pop()
             self.current_node = current_frame.node
@@ -127,6 +127,10 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
         self.reset_parser_attributes()
         self.reset_table_highlights()
         self.reset_highlighted_line()
+
+    def should_start_or_finish(self) -> bool:
+        # if token stream is empty finish since there is nothing left to parse, if not start
+        return bool(self.token_stream)
 
     def next_row(self, rule: str) -> int:
         return self.rule_list.index(rule)
