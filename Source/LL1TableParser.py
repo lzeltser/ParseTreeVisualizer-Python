@@ -25,23 +25,23 @@ from Tree import Tree
 
 class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
     parse_stack: list[ParseStackFrame]
-    ll_table_rules: list[list[LLTableRule]]
+    productions_list: list[list[Rule]]
 
     class ParseStackFrame(Parser.BaseParseStackFrame):
-        def __init__(self, node: Tree, terminal: bool, rule: str) -> None:
+        def __init__(self, node: Tree, rule: LL1TableParser.Rule) -> None:
             super().__init__(node)
-            self.terminal: bool = terminal
-            self.rule: str = rule
+            self.terminal: bool = rule.terminal
+            self.rule: str = rule.name
 
-    class LLTableRule:
-        def __init__(self, terminal: bool, item: str) -> None:
+    class Rule:
+        def __init__(self, terminal: bool, name: str) -> None:
             self.terminal: bool = terminal
-            self.item: str = item
+            self.name: str = name
 
     def __init__(self) -> None:
         self.reset()
-        self.ll_rule_list: list[str] = []
-        self.ll_token_list: list[str] = []
+        self.rule_list: list[str] = []
+        self.token_list: list[str] = []
         self.table: list[list[int]] = []
 
     def table_height(self) -> int:
@@ -51,19 +51,13 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
         return len(self.table[0])
 
     def get_table_top_row(self) -> Iterable[str]:
-        return self.ll_token_list
+        return self.token_list
 
     def get_table_left_col(self) -> Iterable[str]:
-        return self.ll_rule_list
+        return self.rule_list
 
     def get_table_body(self) -> Iterable[Iterable[str]]:
         return [['' if i < 0 else str(i) for i in row] for row in self.table]
-
-    def push_rules_to_stack(self, rules: list[LLTableRule]) -> None:
-        for rule in reversed(rules):
-            self.parse_stack.append(
-                self.ParseStackFrame(self.current_node.add_child(rule.item, 0), rule.terminal, rule.item)
-            )
 
     def code_box_text(self) -> str:
         return self.grammar_to_numbered_list()
@@ -75,9 +69,9 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def generate_rules(self) -> None:
-        self.ll_rule_list = ['program', 'stmt_list', 'stmt', 'cond', 'expr', 'term_tail',
+        self.rule_list = ['program', 'stmt_list', 'stmt', 'cond', 'expr', 'term_tail',
                              'term', 'factor_tail', 'factor', 'ro', 'ao', 'mo']
-        self.ll_token_list = ['<id>', '<i_lit>', 'read', 'write', 'if', 'while', 'end', ':=', '(',
+        self.token_list = ['<id>', '<i_lit>', 'read', 'write', 'if', 'while', 'end', ':=', '(',
                               ')', '+', '-', '*', '/', '=', '<>', '<', '<=', '>', '>=', '<eof>']
         self.table = [
             [+1, -1,  1,  1,  1,  1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , 1],
@@ -93,74 +87,88 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
             [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 25, 26, -1, -1, -1, -1, -1, -1, -1, -1, -1],
             [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 27, 28, -1, -1, -1, -1, -1, -1, -1]
         ]
-        self.ll_table_rules = [
-            [self.LLTableRule(False, 'program')],
-            [self.LLTableRule(False, 'stmt_list'), self.LLTableRule(True, '<eof>')],
-            [self.LLTableRule(False, 'stmt'), self.LLTableRule(False, 'stmt_list')],
+        self.productions_list = [
+            [self.Rule(False, 'program')],
+            [self.Rule(False, 'stmt_list'), self.Rule(True, '<eof>')],
+            [self.Rule(False, 'stmt'), self.Rule(False, 'stmt_list')],
             [],
-            [self.LLTableRule(True, '<id>'), self.LLTableRule(True, ':='), self.LLTableRule(False, 'expr')],
-            [self.LLTableRule(True, 'read'), self.LLTableRule(True, '<id>')],
-            [self.LLTableRule(True, 'write'), self.LLTableRule(False, 'expr')],
-            [self.LLTableRule(True, 'if'), self.LLTableRule(False, 'cond'),
-             self.LLTableRule(False, 'stmt_list'), self.LLTableRule(True, 'end')],
-            [self.LLTableRule(True, 'while'), self.LLTableRule(False, 'cond'),
-             self.LLTableRule(False, 'stmt_list'), self.LLTableRule(True, 'end')],
-            [self.LLTableRule(False, 'expr'), self.LLTableRule(False, 'ro'), self.LLTableRule(False, 'expr')],
-            [self.LLTableRule(False, 'term'), self.LLTableRule(False, 'term_tail')],
-            [self.LLTableRule(False, 'ao'), self.LLTableRule(False, 'term'), self.LLTableRule(False, 'term_tail')],
+            [self.Rule(True, '<id>'), self.Rule(True, ':='), self.Rule(False, 'expr')],
+            [self.Rule(True, 'read'), self.Rule(True, '<id>')],
+            [self.Rule(True, 'write'), self.Rule(False, 'expr')],
+            [self.Rule(True, 'if'), self.Rule(False, 'cond'),
+             self.Rule(False, 'stmt_list'), self.Rule(True, 'end')],
+            [self.Rule(True, 'while'), self.Rule(False, 'cond'),
+             self.Rule(False, 'stmt_list'), self.Rule(True, 'end')],
+            [self.Rule(False, 'expr'), self.Rule(False, 'ro'), self.Rule(False, 'expr')],
+            [self.Rule(False, 'term'), self.Rule(False, 'term_tail')],
+            [self.Rule(False, 'ao'), self.Rule(False, 'term'), self.Rule(False, 'term_tail')],
             [],
-            [self.LLTableRule(False, 'factor'), self.LLTableRule(False, 'factor_tail')],
-            [self.LLTableRule(False, 'mo'), self.LLTableRule(False, 'factor'), self.LLTableRule(False, 'factor_tail')],
+            [self.Rule(False, 'factor'), self.Rule(False, 'factor_tail')],
+            [self.Rule(False, 'mo'), self.Rule(False, 'factor'), self.Rule(False, 'factor_tail')],
             [],
-            [self.LLTableRule(True, '<i_lit>')], [self.LLTableRule(True, '<id>')],
-            [self.LLTableRule(True, '('), self.LLTableRule(False, 'expr'), self.LLTableRule(True, ')')],
-            [self.LLTableRule(True, '=')], [self.LLTableRule(True, '<>')], [self.LLTableRule(True, '<')],
-            [self.LLTableRule(True, '<=')], [self.LLTableRule(True, '>')], [self.LLTableRule(True, '>=')],
-            [self.LLTableRule(True, '+')], [self.LLTableRule(True, '-')],
-            [self.LLTableRule(True, '*')], [self.LLTableRule(True, '/')]
+            [self.Rule(True, '<i_lit>')], [self.Rule(True, '<id>')],
+            [self.Rule(True, '('), self.Rule(False, 'expr'), self.Rule(True, ')')],
+            [self.Rule(True, '=')], [self.Rule(True, '<>')], [self.Rule(True, '<')],
+            [self.Rule(True, '<=')], [self.Rule(True, '>')], [self.Rule(True, '>=')],
+            [self.Rule(True, '+')], [self.Rule(True, '-')],
+            [self.Rule(True, '*')], [self.Rule(True, '/')]
         ]
 
     def step(self) -> None:
-        self.curr_highlighted_line = -1
-        if len(self.parse_stack) < 1:
-            if self.current_node is None:  # empty stack: push start symbol
-                self.tree = self.current_node = Tree(self.ll_table_rules[0][0].item)
-                self.parse_stack.append(
-                    self.ParseStackFrame(self.tree, self.ll_table_rules[0][0].terminal, self.current_node.name))
-            else:  # empty stack: finish parse
-                self.curr_highlighted_row = self.curr_highlighted_col = self.last_highlighted_row = self.last_highlighted_col = -1
-                self.current_node = self.tree
-                self.finished_parsing = True
+        self.reset_highlighted_line()
+        if not self.parse_stack:
+            self.start_parse() if self.token_stream else self.finish_parse()
         else:
-            frame = self.parse_stack.pop()
-            self.current_node = frame.node
-            if frame.terminal:  # terminal, match token
-                self.curr_highlighted_row = self.curr_highlighted_col = -1
-                if frame.rule == self.token_stream[0].name:
-                    self.current_node.name = self.token_stream.pop(0).image
-                else:
-                    self.current_node.name = "ERROR"
-                    self.finished_parsing = True
-            else:  # non-terminal, push to stack
-                self.curr_highlighted_row = self.last_highlighted_row = self.ll_rule_list.index(frame.rule)
-                self.curr_highlighted_col = self.last_highlighted_col = self.ll_token_list.index(self.token_stream[0].name)
-                rule_index: int = self.table[self.curr_highlighted_row][self.curr_highlighted_col]
-                if rule_index < 0:
-                    self.current_node = self.current_node.add_child("ERROR")
-                    self.finished_parsing = True
-                else:  # rule exists
-                    self.push_rules_to_stack(self.ll_table_rules[rule_index])
-                    self.line_to_move_scrollbar_to = self.curr_highlighted_line = rule_index - 1
+            current_frame: LL1TableParser.ParseStackFrame = self.parse_stack.pop()
+            self.current_node = current_frame.node
+            self.match_token(current_frame.rule) if current_frame.terminal else self.non_terminal(current_frame.rule)
 
     def reset(self) -> None:
-        self.tree = None
-        self.current_node = None
-        self.parse_stack = []
-        self.token_stream = []
-        self.finished_parsing = False
-        self.curr_highlighted_line = -1
-        self.line_to_move_scrollbar_to = -1
-        self.curr_highlighted_row = -1
-        self.curr_highlighted_col = -1
-        self.last_highlighted_row = -1
-        self.last_highlighted_col = -1
+        self.reset_parser_attributes()
+        self.reset_table_highlights()
+        self.reset_highlighted_line()
+
+    def next_row(self, rule: str) -> int:
+        return self.rule_list.index(rule)
+
+    def next_col(self) -> int:
+        return self.token_list.index(self.token_stream[0].name)
+
+    def next_rule_index(self, rule: str) -> int:
+        return self.table[self.next_row(rule)][self.next_col()]
+
+    def start_parse(self) -> None:
+        self.tree = self.current_node = Tree(self.productions_list[0][0].name)
+        self.parse_stack.append(self.ParseStackFrame(self.tree, self.productions_list[0][0]))
+
+    def match_token(self, rule: str) -> None:
+        self.unhighlight_table()
+        if rule == self.token_stream[0].name:
+            self.current_node.name = self.token_stream.pop(0).image
+        else:
+            self.finish_parse_with_error(self.current_node)
+
+    def non_terminal(self, rule: str) -> None:
+        self.highlight_row(self.next_row(rule))
+        self.highlight_col(self.next_col())
+        if self.next_rule_index(rule) >= 0:
+            self.push_rules_to_stack(self.productions_list[self.next_rule_index(rule)])
+            self.set_scroll_bar_to_line(self.next_rule_index(rule))
+            self.set_highlighted_line(self.next_rule_index(rule))
+        else:
+            self.finish_parse_with_error(self.current_node.add_child(''))
+
+    def push_rules_to_stack(self, rules: list[Rule]) -> None:
+        for rule in reversed(rules):
+            self.parse_stack.append(self.ParseStackFrame(self.current_node.add_child(rule.name, 0), rule))
+
+    def finish_parse_with_error(self, error_node: Tree) -> None:
+        error_node.name = "ERROR"
+        self.current_node = error_node
+        self.finished_parsing = True
+        self.parse_error = True
+
+    def finish_parse(self) -> None:
+        self.reset_table_highlights()
+        self.current_node = self.tree
+        self.finished_parsing = True

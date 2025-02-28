@@ -297,7 +297,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.CodeBox.setHtml(self.current_parser.code_box_text())
         self.move_scroll_bar(
             self.CodeBox.verticalScrollBar(),
-            self.current_parser.line_to_move_scrollbar_to,
+            self.current_parser.scroll_bar_line,
             self.current_parser.lines_of_code()
         )
 
@@ -360,7 +360,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 text_width: float = self.make_text_graphic(x, y, node.name).boundingRect().width()
                 self.make_box_graphic(
                     x, y, text_width, self.current_parser.node_on_stack(node),
-                    node is self.current_parser.current_node and not self.current_parser.finished_parsing
+                    self.current_parser.node_should_be_highlighted(node)
                 )
                 if self.graphics_settings.shadow_enabled:
                     self.make_box_shadow_graphic(x, y, text_width)

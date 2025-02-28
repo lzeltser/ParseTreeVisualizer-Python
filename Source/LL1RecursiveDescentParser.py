@@ -195,41 +195,33 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def step(self) -> None:
         self.remove_highlight()
-        if len(self.parse_stack) < 1:
+        if not self.parse_stack:
             self.start_parse() if self.token_stream else self.finish_parse()
         elif self.parse_stack[-1].rule is None:
-            self.parse_error()
+            self.finish_parse_with_error()
         elif self.parse_stack[-1].should_return():
             self.return_from_function()
+        elif self.parse_stack[-1].current_action().action == self.ActionType.Descend:
+            self.descend_to_function()
+        elif self.parse_stack[-1].current_action().action == self.ActionType.Match:
+            self.match_token()
         else:
-            match self.parse_stack[-1].current_action().action:
-                case self.ActionType.Descend:
-                    self.descend_to_function()
-                case self.ActionType.Match:
-                    self.match_token()
-                case _:
-                    self.parse_error()
+            self.finish_parse_with_error()
 
     def reset(self) -> None:
-        self.tree = None
-        self.current_node = None
-        self.parse_stack = []
-        self.token_stream = []
-        self.finished_parsing = False
-        self.line_to_move_scrollbar_to = -1
+        self.reset_parser_attributes()
         self.remove_highlight()
 
-    def find_rule(self, current_function: str, next_token: str) -> Rule:
-        for rule in self.rules[current_function]:
-            if next_token in rule:
-                return rule
+    def next_rule(self) -> Rule:
+        return next(filter(
+            lambda rule: self.token_stream[0].name in rule,
+            self.rules[self.parse_stack[-1].current_action().name if self.parse_stack else self.start_symbol_name]
+        ), None)
 
     def start_parse(self) -> None:
         self.tree = self.current_node = Tree(self.start_symbol_name)
         self.highlight_line(self.start_rule)
-        self.parse_stack.append(self.ParseStackFrame(
-            self.tree, self.find_rule(self.start_symbol_name, self.token_stream[0].name)
-        ))
+        self.parse_stack.append(self.ParseStackFrame(self.tree, self.next_rule()))
 
     def return_from_function(self) -> None:
         self.current_node = self.parse_stack[-1].node
@@ -241,22 +233,20 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
     def descend_to_function(self) -> None:
         self.current_node = self.parse_stack[-1].node.add_child(self.parse_stack[-1].current_action().name)
         self.highlight_line(self.parse_stack[-1].current_action())
-        self.parse_stack.append(self.ParseStackFrame(
-            self.current_node, self.find_rule(self.parse_stack[-1].current_action().name, self.token_stream[0].name)
-        ))
+        self.parse_stack.append(self.ParseStackFrame(self.current_node, self.next_rule()))
 
     def match_token(self) -> None:
-        if self.parse_stack[-1].current_action().name == self.token_stream[0].name:
-            self.current_node = self.parse_stack[-1].node.add_child(self.token_stream[0].image)
+        if self.token_stream[0].name == self.parse_stack[-1].current_action().name:
+            self.current_node = self.parse_stack[-1].node.add_child(self.token_stream.pop(0).image)
             self.highlight_line(self.parse_stack[-1].current_action())
-            self.token_stream.pop(0)
             self.parse_stack[-1].index += 1
         else:
-            self.parse_error()
+            self.finish_parse_with_error()
 
-    def parse_error(self) -> None:
+    def finish_parse_with_error(self) -> None:
         self.current_node = self.parse_stack[-1].node.add_child("ERROR")
         self.finished_parsing = True
+        self.parse_error = True
 
     def finish_parse(self) -> None:
         self.current_node = self.tree
@@ -322,7 +312,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def highlight_line(self, rule: Action) -> None:
         self.highlighted_rule = rule
-        self.line_to_move_scrollbar_to = rule.code_line
+        self.set_scroll_bar_to_index(rule.code_line)
 
     def remove_highlight(self) -> None:
         self.highlighted_rule = self.null_rule
