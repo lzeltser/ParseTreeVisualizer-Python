@@ -242,13 +242,6 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         self.highlight_line(self.start_rule)
         self.parse_stack.append(self.ParseStackFrame(self.tree, self.next_rule()))
 
-    def return_from_function(self) -> None:
-        self.current_node = self.parse_stack[-1].node
-        self.highlight_line(self.parse_stack[-1].return_action())
-        self.parse_stack.pop()
-        if self.parse_stack:
-            self.parse_stack[-1].increment_index()
-
     def descend_to_function(self) -> None:
         self.current_node = self.parse_stack[-1].node.add_child(self.parse_stack[-1].current_action().name)
         self.highlight_line(self.parse_stack[-1].current_action())
@@ -261,6 +254,13 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
             self.parse_stack[-1].increment_index()
         else:
             self.finish_parse_with_error()
+
+    def return_from_function(self) -> None:
+        self.current_node = self.parse_stack[-1].node
+        self.highlight_line(self.parse_stack[-1].return_action())
+        self.parse_stack.pop()
+        if self.parse_stack:
+            self.parse_stack[-1].increment_index()
 
     def finish_parse_with_error(self) -> None:
         self.current_node = self.parse_stack[-1].node.add_child("ERROR")
