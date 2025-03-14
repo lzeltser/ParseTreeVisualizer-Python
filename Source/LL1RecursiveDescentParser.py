@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 from enum import IntEnum, auto
+import os
 
 import HTML
 from Parser import Parser, LL1Parser
@@ -86,6 +87,8 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
             return len(self.actions)
 
     class Language:
+        language_files_folder: str = '../RDCodeLanguages/'
+
         def __init__(self, file_name: str) -> None:
             self.name: str = file_name.removesuffix('.la')
 
@@ -123,7 +126,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
             self.program_last_statements: str = ''
 
-            self.get_attributes_from_file('../RDCodeLanguages/' + file_name)
+            self.get_attributes_from_file(self.language_files_folder + file_name)
 
         def get_attributes_from_file(self, file_name: str) -> None:
             with open(file_name, 'r') as f:
@@ -137,15 +140,77 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
             for i, line in enumerate(attr_lines[:-1]):
                 setattr(self, lines[line].split(':')[0], '\n'.join(lines[line + 1:attr_lines[i + 1]]))
 
+        def make_code(self, rules: dict[str, list[LL1RecursiveDescentParser.Rule]],
+                      start_rule: LL1RecursiveDescentParser.Action) -> list[str]:
+            code: list[str] = []
+            rule_counter: int = 1
+            if self.program_first_statements != '':
+                code += self.program_first_statements.split('\n')
+            if self.declare_functions:
+                for declaration in rules:
+                    code.append(
+                        self.function_declaration_beginning + declaration + self.function_declaration_end)
+                code.append('')
+                code.append('')
+            code += self.first_code.split('\n')
+            code[-1] += (start_rule.name + self.end_of_main.split('\n')[0])
+            start_rule.code_line = len(code) - 1
+            code += self.end_of_main.split('\n')[1:]
+
+            for rule_name, rules_ in rules.items():
+                code.append(
+                    self.function_definition_beginning + rule_name + self.function_definition_end +
+                    (self.start_symbol_comment if start_rule.name == rule_name else ''))
+                code.append(self.switch_beginning)
+
+                for rule in rules_:
+                    rule_text: list[str] = [production.name for production in rule.actions]
+                    rule_text = ['epsilon'] if rule_text == [] else rule_text
+                    code += \
+                        (self.case_beginning + self.case_separator.join(rule.tokens) + self.case_end +
+                         f"{self.comment_begin}P{rule_counter}: {rule_name} -> "
+                         f"{' '.join(rule_text)}{self.comment_end}").split('\n')
+                    rule_counter += 1
+                    for i, production in enumerate(rule.actions):
+                        production.code_line = i + len(code)
+
+                    steps_text: str = ''
+                    for production in rule.actions[:-1]:
+                        steps_text += ((self.call_function_beginning + production.name + self.call_function_end
+                                        if not production.action else
+                                        self.call_match_beginning + production.name + self.call_match_end) + '\n')
+                    steps_text = (self.skip_case + '\n') if steps_text == '' else steps_text
+
+                    code += steps_text.split('\n')[:-1]
+                    if self.end_of_case != '':
+                        code += self.end_of_case.split('\n')
+
+                code += self.switch_default.split('\n')
+                return_line: int = len(code)
+                for rule in rules_:
+                    rule.actions[-1].code_line = return_line
+
+                code += self.function_last_lines.split('\n')
+            code.pop()
+
+            if self.program_last_statements != '':
+                code += self.program_last_statements.split('\n')
+
+            return code
+
+        @classmethod
+        def make_languages_list(cls) -> list[LL1RecursiveDescentParser.Language]:
+            languages_list: list[LL1RecursiveDescentParser.Language] =\
+                [cls(file) for file in os.listdir(cls.language_files_folder)]
+            languages_list.insert(0, languages_list.pop(
+                next(filter(lambda l: l[1].name == 'Pseudocode', enumerate(languages_list)), (0, None))[0]))
+            return languages_list
+
     def __init__(self) -> None:
         self.rules = {}
         self.highlighted_rule = self.null_rule = self.Action('', self.ActionType.Return)
         self.start_rule = self.Action('', self.ActionType.Return)
-        self.languages: list[LL1RecursiveDescentParser.Language] = [
-            self.Language('Pseudocode.la'),
-            self.Language('C.la'),
-            self.Language('Python.la')
-        ]  # TODO: look at all files in directory
+        self.languages: list[LL1RecursiveDescentParser.Language] = self.Language.make_languages_list()
         self.reset()
 
     def code_box_text(self) -> str:
@@ -159,6 +224,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def generate_rules(self) -> None:
         self.start_symbol_name = 'program'
+        self.start_rule.name = 'program'
         self.rules = dict.fromkeys(self.grammar.rule_names_list)
         for entry in self.rules:
             self.rules[entry] = []
@@ -327,62 +393,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         self.finished_parsing = True
 
     def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
-        # TODO: figure out how to put this in the Language class
-        language: LL1RecursiveDescentParser.Language = self.languages[language_index]
-        rule_counter: int = 1
-        self.code = []
-
-        if language.program_first_statements != '':
-            self.code += language.program_first_statements.split('\n')
-        if language.declare_functions:
-            for declaration in self.rules:
-                self.code.append(
-                    language.function_declaration_beginning + declaration + language.function_declaration_end)
-            self.code.append('')
-            self.code.append('')
-        self.code += language.first_code.split('\n')
-        self.code[-1] += (self.start_symbol_name + language.end_of_main.split('\n')[0])
-        self.start_rule.code_line = len(self.code) - 1
-        self.code += language.end_of_main.split('\n')[1:]
-
-        for rule_name, rules in self.rules.items():
-            self.code.append(
-                language.function_definition_beginning + rule_name + language.function_definition_end +
-                (language.start_symbol_comment if self.start_symbol_name == rule_name else ''))
-            self.code.append(language.switch_beginning)
-
-            for rule in rules:
-                rule_text: list[str] = [production.name for production in rule.actions]
-                rule_text = ['epsilon'] if rule_text == [] else rule_text
-                self.code += \
-                    (language.case_beginning + language.case_separator.join(rule.tokens) + language.case_end +
-                     f"{language.comment_begin}P{rule_counter}: {rule_name} -> "
-                     f"{' '.join(rule_text)}{language.comment_end}").split('\n')
-                rule_counter += 1
-                for i, production in enumerate(rule.actions):
-                    production.code_line = i + len(self.code)
-
-                steps_text: str = ''
-                for production in rule.actions[:-1]:
-                    steps_text += ((language.call_function_beginning + production.name + language.call_function_end
-                                    if not production.action else
-                                    language.call_match_beginning + production.name + language.call_match_end) + '\n')
-                steps_text = (language.skip_case + '\n') if steps_text == '' else steps_text
-
-                self.code += steps_text.split('\n')[:-1]
-                if language.end_of_case != '':
-                    self.code += language.end_of_case.split('\n')
-
-            self.code += language.switch_default.split('\n')
-            return_line: int = len(self.code)
-            for rule in rules:
-                rule.actions[-1].code_line = return_line
-
-            self.code += language.function_last_lines.split('\n')
-        self.code.pop()
-
-        if language.program_last_statements != '':
-            self.code += language.program_last_statements.split('\n')
+        self.code = self.languages[language_index].make_code(self.rules, self.start_rule)
 
     def highlight_line(self, action: Action) -> None:
         self.highlighted_rule = action
