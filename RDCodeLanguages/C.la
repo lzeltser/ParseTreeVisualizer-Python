@@ -1,0 +1,74 @@
+declare_functions: True
+program_first_statements:
+#include <stdlib.h>
+
+void match(token);
+void error(void);
+function_declaration_beginning:
+void
+function_declaration_end:
+(void);
+first_code:
+void match(token expected) {
+    if (input_token == expected) {
+        consume_input_token();
+    }
+    else {
+        error();
+    }
+}
+
+void error(void) {
+    exit(1);
+}
+
+
+int main(int argc, char* argv[]) {
+
+end_of_main:
+();  // invoke start symbol
+    return 0;
+}
+
+
+function_definition_beginning:
+void
+function_definition_end:
+(void) {
+start_symbol_comment:
+  // this is the start symbol
+switch_beginning:
+    switch(input_token) {
+case_beginning:
+    case '
+case_separator:
+':
+    case '
+case_end:
+':
+comment_begin:
+  //
+comment_end:
+call_function_beginning:
+
+call_function_end:
+();
+call_match_beginning:
+        match(
+call_match_end:
+);
+end_of_case:
+        break;
+skip_case:
+        // epsilon production
+switch_default:
+    default:
+        error();
+        break;
+    }
+function_last_lines:
+    return;
+}
+
+
+program_last_statements:

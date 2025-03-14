@@ -20,7 +20,6 @@ from __future__ import annotations
 from enum import IntEnum, auto
 
 import HTML
-import RDCodeRules
 from Parser import Parser, LL1Parser
 from Tree import Tree
 
@@ -86,11 +85,67 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         def __len__(self) -> int:
             return len(self.actions)
 
+    class Language:
+        def __init__(self, file_name: str) -> None:
+            self.name: str = file_name.removesuffix('.la')
+
+            self.declare_functions: bool = False
+
+            self.program_first_statements: str = ''  # things like include statements in C go here
+
+            self.function_declaration_beginning: str = ''
+            self.function_declaration_end: str = ''
+
+            self.first_code: str = ''  # match, error, and main functions go here
+            self.end_of_main: str = ''
+
+            self.function_definition_beginning: str = ''
+            self.function_definition_end: str = ''
+            self.start_symbol_comment: str = ''
+
+            self.switch_beginning: str = ''
+            self.case_beginning: str = ''
+            self.case_separator: str = ''
+            self.case_end: str = ''
+            self.comment_begin: str = ''
+            self.comment_end: str = ''
+
+            self.call_function_beginning: str = ''
+            self.call_function_end: str = ''
+            self.call_match_beginning: str = ''
+            self.call_match_end: str = ''
+
+            self.end_of_case: str = ''
+            self.skip_case: str = ''
+            self.switch_default: str = ''  # this will call the parse error and end of statement
+
+            self.function_last_lines: str = ''
+
+            self.program_last_statements: str = ''
+
+            self.get_attributes_from_file('../RDCodeLanguages/' + file_name)
+
+        def get_attributes_from_file(self, file_name: str) -> None:
+            with open(file_name, 'r') as f:
+                lines: list[str] = f.read().split('\n')
+            self.declare_functions = True if lines.pop(0).split(':')[1].strip().lower()[0] == 't' else False
+            attr_lines: list[int] = []
+            for i, line in enumerate(lines):
+                if hasattr(self, line.removesuffix(':')):
+                    attr_lines.append(i)
+            attr_lines.append(len(attr_lines) - 1)
+            for i, line in enumerate(attr_lines[:-1]):
+                setattr(self, lines[line].split(':')[0], '\n'.join(lines[line + 1:attr_lines[i + 1]]))
+
     def __init__(self) -> None:
         self.rules = {}
         self.highlighted_rule = self.null_rule = self.Action('', self.ActionType.Return)
         self.start_rule = self.Action('', self.ActionType.Return)
-        self.languages: list[RDCodeRules.Language] = RDCodeRules.RecursiveDescentCodeLanguages
+        self.languages: list[LL1RecursiveDescentParser.Language] = [
+            self.Language('Pseudocode.la'),
+            self.Language('C.la'),
+            self.Language('Python.la')
+        ]  # TODO: look at all files in directory
         self.reset()
 
     def code_box_text(self) -> str:
@@ -273,7 +328,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
 
     def make_code(self, language_index: int = 0) -> None:  # pseudocode is the default option
         # TODO: figure out how to put this in the Language class
-        language: RDCodeRules.Language = self.languages[language_index]
+        language: LL1RecursiveDescentParser.Language = self.languages[language_index]
         rule_counter: int = 1
         self.code = []
 

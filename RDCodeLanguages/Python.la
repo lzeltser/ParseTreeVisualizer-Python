@@ -1,0 +1,57 @@
+declare_functions: False
+program_first_statements:
+function_declaration_beginning:
+function_declaration_end:
+first_code:
+def match_(expected):
+    if input_token == expected:
+        consume(input_token)
+    else:
+        raise ParseError
+
+
+def main()
+
+end_of_main:
+()  # invoke start symbol
+
+
+function_definition_beginning:
+def
+function_definition_end:
+():
+start_symbol_comment:
+  # this is the start symbol
+switch_beginning:
+    match input_token:
+case_beginning:
+        case '
+case_separator:
+' | '
+case_end:
+':
+comment_begin:
+  #
+comment_end:
+call_function_beginning:
+
+call_function_end:
+()
+call_match_beginning:
+            match_('
+call_match_end:
+')
+end_of_case:
+skip_case:
+            pass  /* epsilon production */
+switch_default:
+        case _:
+            raise ParseError
+function_last_lines:
+    return
+
+
+program_last_statements:
+
+if __name__ == '__main__':
+    main()

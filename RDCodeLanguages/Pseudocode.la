@@ -1,0 +1,53 @@
+declare_functions: False
+program_first_statements:
+function_declaration_beginning:
+function_declaration_end:
+first_code:
+procedure match(expected)
+    if input_token = expected then consume_input_token()
+    else parse_error
+
+
+procedure main()
+
+end_of_main:
+()  /* invoke start symbol */
+
+
+function_definition_beginning:
+procedure
+function_definition_end:
+()
+start_symbol_comment:
+  /* this is the start symbol */
+switch_beginning:
+    case input_token of
+case_beginning:
+
+case_separator:
+,
+case_end:
+ :
+comment_begin:
+  /*
+comment_end:
+ */
+call_function_beginning:
+
+call_function_end:
+()
+call_match_beginning:
+            match(
+call_match_end:
+)
+end_of_case:
+
+skip_case:
+            skip  /* epsilon production */
+switch_default:
+    otherwise parse_error
+function_last_lines:
+    return
+
+
+program_last_statements:
