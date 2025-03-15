@@ -177,7 +177,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
                     steps_text: str = ''
                     for production in rule.actions[:-1]:
                         steps_text += ((self.call_function_beginning + production.name + self.call_function_end
-                                        if not production.action else
+                                        if production.action == LL1RecursiveDescentParser.ActionType.Descend else
                                         self.call_match_beginning + production.name + self.call_match_end) + '\n')
                     steps_text = (self.skip_case + '\n') if steps_text == '' else steps_text
 
@@ -202,8 +202,9 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         def make_languages_list(cls) -> list[LL1RecursiveDescentParser.Language]:
             languages_list: list[LL1RecursiveDescentParser.Language] =\
                 [cls(file) for file in os.listdir(cls.language_files_folder)]
-            languages_list.insert(0, languages_list.pop(
-                next(filter(lambda l: l[1].name == 'Pseudocode', enumerate(languages_list)), (0, None))[0]))
+            languages_list.insert(
+                0, languages_list.pop(next((i for i, l in enumerate(languages_list) if l.name == 'Pseudocode'), 0))
+            )
             return languages_list
 
     def __init__(self) -> None:
