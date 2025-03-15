@@ -11,13 +11,13 @@ def match_(expected):
 
 
 def main()
-
+    
 end_of_main:
 ()  # invoke start symbol
 
 
 function_definition_beginning:
-def
+def 
 function_definition_end:
 ():
 start_symbol_comment:
@@ -31,10 +31,10 @@ case_separator:
 case_end:
 ':
 comment_begin:
-  #
+  # 
 comment_end:
 call_function_beginning:
-
+        
 call_function_end:
 ()
 call_match_beginning:

@@ -5,7 +5,7 @@ program_first_statements:
 void match(token);
 void error(void);
 function_declaration_beginning:
-void
+void 
 function_declaration_end:
 (void);
 first_code:
@@ -24,7 +24,7 @@ void error(void) {
 
 
 int main(int argc, char* argv[]) {
-
+    
 end_of_main:
 ();  // invoke start symbol
     return 0;
@@ -32,7 +32,7 @@ end_of_main:
 
 
 function_definition_beginning:
-void
+void 
 function_definition_end:
 (void) {
 start_symbol_comment:
@@ -47,10 +47,10 @@ case_separator:
 case_end:
 ':
 comment_begin:
-  //
+  // 
 comment_end:
 call_function_beginning:
-
+        
 call_function_end:
 ();
 call_match_beginning:

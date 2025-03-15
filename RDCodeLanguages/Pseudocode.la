@@ -9,31 +9,31 @@ procedure match(expected)
 
 
 procedure main()
-
+    
 end_of_main:
 ()  /* invoke start symbol */
 
 
 function_definition_beginning:
-procedure
+procedure 
 function_definition_end:
 ()
 start_symbol_comment:
   /* this is the start symbol */
 switch_beginning:
-    case input_token of
+    case input_token of 
 case_beginning:
-
+        
 case_separator:
-,
+, 
 case_end:
  :
 comment_begin:
-  /*
+  /* 
 comment_end:
  */
 call_function_beginning:
-
+            
 call_function_end:
 ()
 call_match_beginning:
@@ -46,6 +46,7 @@ skip_case:
             skip  /* epsilon production */
 switch_default:
     otherwise parse_error
+
 function_last_lines:
     return
 
