@@ -132,10 +132,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
             with open(file_name, 'r') as f:
                 lines: list[str] = f.read().split('\n')
             self.declare_functions = True if lines.pop(0).split(':')[1].strip().lower()[0] == 't' else False
-            attr_lines: list[int] = []
-            for i, line in enumerate(lines):
-                if hasattr(self, line.removesuffix(':')):
-                    attr_lines.append(i)
+            attr_lines: list[int] = [i for i, line in enumerate(lines) if hasattr(self, line.removesuffix(':'))]
             attr_lines.append(len(attr_lines) - 1)
             for i, line in enumerate(attr_lines[:-1]):
                 setattr(self, lines[line].split(':')[0], '\n'.join(lines[line + 1:attr_lines[i + 1]]))

@@ -62,17 +62,15 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.thread_pool: QtCore.QThreadPool = QtCore.QThreadPool()
 
         self.parsers: list[Parser] = [LL1RecursiveDescentParser(), LL1TableParser(), SLRTableParser()]
+        # noinspection PyUnresolvedReferences
+        for language in self.parsers[0].languages:
+            self.RDCodeSelectBox.addItem(language.name)
         with open("../Grammars/Calculator-LL.gr", 'r') as f:
             self.parsers[0].input_grammar(f.read())
         with open("../Grammars/Calculator-LL.gr", 'r') as f:
             self.parsers[1].input_grammar(f.read())
         with open("../Grammars/Calculator-LR.gr", 'r') as f:
             self.parsers[2].input_grammar(f.read())
-        for language in self.parsers[0].languages:
-            self.RDCodeSelectBox.addItem(language.name)
-        # TODO: figure out how to ignore above warning
-
-        # TODO: let users get a new grammar
 
         # Initialize grammar, code, and other class variables
         with open("../ExampleCode/Average.cl", "r") as f:
