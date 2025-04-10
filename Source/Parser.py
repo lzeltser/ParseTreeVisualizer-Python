@@ -124,7 +124,73 @@ class WritesGrammar(UsesGrammar):
 
 
 class LL1Parser(UsesGrammar):
-    def compute_predict_sets(self) -> None:
-        first_set: dict[str, list[str]] = dict.fromkeys(self.grammar.rule_names_list)
-        for entry in first_set:
-            first_set[entry] = []
+    def compute_predict_sets(self) -> list[list[str]]:
+        start_symbol = self.grammar.rule_names_list[0]
+
+        first_sets: dict[str, list[str]] = {}
+        for rule_name in self.grammar.rule_names_list:
+            first_sets[rule_name] = []
+        for token in self.grammar.tokens_list:
+            first_sets[token] = [token]
+        for rule in self.grammar.rules:
+            if rule.productions[0].terminal:
+                first_sets[rule.name].append(rule.productions[0].name)
+        made_progress: bool = True
+        while made_progress:
+            made_progress = False
+            for rule in self.grammar.rules:
+                if rule.productions[0].terminal:
+                    continue
+                first_len = len(first_sets[rule.name])
+                first_sets[rule.name] = list(set(first_sets[rule.name] + first_sets[rule.productions[0].name]))
+                made_progress = made_progress or len(first_sets[rule.name]) > first_len
+        if '' in first_sets[start_symbol]:
+            first_sets[start_symbol].remove('')
+        if 'eof' not in first_sets[start_symbol]:
+            first_sets[start_symbol].append('eof')
+        first_sets[''] = ['']
+
+        follow_sets: dict[str, list[str]] = {}
+        for key in first_sets:
+            follow_sets[key] = []
+        follow_sets[start_symbol].append('')
+        made_progress: bool = True
+        while made_progress:
+            made_progress = False
+            for rule in self.grammar.rules:
+                for i, production in enumerate(rule.productions):
+                    if production.name == '':
+                        continue
+                    first_len = len(follow_sets[production.name])
+                    if i + 1 < len(rule.productions):
+                        new_set = [c for c in first_sets[rule.productions[i+1].name]]
+                        if '' in new_set:
+                            new_set.remove('')
+                        follow_sets[production.name] = list(set(follow_sets[production.name] + new_set))
+                    if i == len(rule.productions)-1 or '' in first_sets[rule.productions[i+1].name]:
+                        follow_sets[production.name] = list(set(follow_sets[production.name] + follow_sets[rule.name]))
+                    made_progress = made_progress or len(follow_sets[production.name]) > first_len
+
+        predict_sets: list[list[str]] = []
+        for rule in self.grammar.rules:
+            new_set: list[str] = [symbol for symbol in first_sets[rule.productions[0].name]]
+            if '' in new_set:
+                new_set.remove('')
+                new_set = list(set(new_set + follow_sets[rule.name]))
+            predict_sets.append(new_set)
+
+        # in case I need to test the sets
+        """
+        def write_dict(d: dict):
+            for k, v in d.items():
+                print(f'{k} : {v}')
+        print('------------------  First sets:  ------------------')
+        write_dict(first_sets)
+        print('\n\n\n------------------  Follow sets:  ------------------')
+        write_dict(follow_sets)
+        print('\n\n\n------------------  Predict sets:  ------------------')
+        for rule, predict_set in zip(self.grammar.rules, predict_sets):
+            print(f'{rule.make_formatted_str(0)} :      {predict_set}')
+        """
+
+        return predict_sets
