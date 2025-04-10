@@ -51,7 +51,7 @@ class Grammar:
         pass
 
     def __init__(self, description: str) -> None:
-        self.description: str = description.lower()
+        self.description: str = description.lower().strip()
         self.rules: list[Grammar.Rule] = []
         self.tokens_list: list[str] = []
 
@@ -154,7 +154,7 @@ class Grammar:
                     elif char == '"':
                         self.rules[-1].productions.append(Grammar.Production(current_string, True))
                         self.tokens_list.append(current_string)
-                        current_state = 13
+                        current_state = 9
                     else:
                         current_string += char
                 case 11:
@@ -169,21 +169,6 @@ class Grammar:
                         current_state = 0
                     else:
                         pass
-                case 13:
-                    if char == '<':
-                        current_string = ''
-                        current_state = 7
-                    elif char.isspace() and char != '\n':
-                        pass
-                    elif char == '|':
-                        self.rules.append(Grammar.Rule(current_rule_name))
-                        current_state = 6
-                    elif char == '\n':
-                        current_state = 0
-                    elif char == ';':
-                        current_state = 12
-                    else:
-                        raise self.GrammarParsingException("Symbol following literal must begin with '<'")
                 case _:
                     raise self.GrammarParsingException("Something went wrong.")
 
