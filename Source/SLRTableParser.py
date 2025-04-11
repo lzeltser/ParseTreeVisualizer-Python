@@ -87,8 +87,8 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def generate_rules(self) -> None:
-        self.symbol_list = ['stmt_list', 'stmt', 'expr', 'term', 'factor', 'ao', 'mo', '<id>',
-                               '<i_lit>', 'read', 'write', ':=', '(', ')', '+', '-', '*', '/', '<eof>']
+        self.symbol_list = ['stmt_list', 'stmt', 'expr', 'term', 'factor', 'ao', 'mo', 'id',
+                               'i_lit', 'read', 'write', ':=', '(', ')', '+', '-', '*', '/', 'eof']
         be = self.TableEntry(self.Actions.Nothing, -1)  # blank entry
         self.table = [
             [self.TableEntry(self.Actions.Shift, 2), self.TableEntry(self.Actions.ShiftReduce, 3), be, be, be, be,
