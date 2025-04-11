@@ -124,7 +124,7 @@ class WritesGrammar(UsesGrammar):
 
 
 class LL1Parser(UsesGrammar):
-    def compute_predict_sets(self) -> list[list[str]]:
+    def make_predict_sets(self) -> list[list[str]]:
         start_symbol = self.grammar.rule_names_list[0]
 
         first_sets: dict[str, list[str]] = {}

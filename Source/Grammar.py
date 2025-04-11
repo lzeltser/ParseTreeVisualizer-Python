@@ -175,9 +175,12 @@ class Grammar:
         if current_state != 0 and current_state != 9 and current_state != 13:
             raise self.GrammarParsingException("Grammar definition is incomplete")
 
-        self.tokens_list = list(set(self.tokens_list))
+        self.tokens_list = list(dict.fromkeys(self.tokens_list))
         if '' in self.tokens_list:
             self.tokens_list.remove('')
+        if 'eof' in self.tokens_list:
+            self.tokens_list.remove('eof')
+            self.tokens_list.append('eof')
 
     def __len__(self):
         return len(self.rules)
