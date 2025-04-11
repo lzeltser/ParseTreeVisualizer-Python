@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 from collections.abc import Iterable
+import itertools
 
 from Parser import Parser, UsesTable, WritesGrammar, LL1Parser
 from Tree import Tree
@@ -69,50 +70,19 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
         return ' '.join(map(lambda x: x.node.name, self.parse_stack))
 
     def generate_rules(self) -> None:
-        self.rule_list = ['program', 'stmt_list', 'stmt', 'cond', 'expr', 'term_tail',
-                             'term', 'factor_tail', 'factor', 'ro', 'ao', 'mo']
-        self.token_list = ['<id>', '<i_lit>', 'read', 'write', 'if', 'while', 'end', ':=', '(',
-                              ')', '+', '-', '*', '/', '=', '<>', '<', '<=', '>', '>=', '<eof>']
-        self.table = [
-            [+1, -1,  1,  1,  1,  1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , 1],
-            [+2, -1,  2,  2,  2,  2,  3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  3],
-            [+4, -1,  5,  6,  7,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [+9,  9, -1, -1, -1, -1, -1, -1,  9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [10, 10, -1, -1, -1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [12, -1, 12, 12, 12, 12, 12, -1, -1, 12, 11, 11, -1, -1, 12, 12, 12, 12, 12, 12, 12],
-            [13, 13, -1, -1, -1, -1, -1, -1, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [15, -1, 15, 15, 15, 15, 15, -1, -1, 15, 15, 15, 14, 14, 15, 15, 15, 15, 15, 15, 15],
-            [17, 16, -1, -1, -1, -1, -1, -1, 18, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 25, 26, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 27, 28, -1, -1, -1, -1, -1, -1, -1]
-        ]
-        self.productions_list = [
-            [self.Rule(False, 'program')],
-            [self.Rule(False, 'stmt_list'), self.Rule(True, '<eof>')],
-            [self.Rule(False, 'stmt'), self.Rule(False, 'stmt_list')],
-            [],
-            [self.Rule(True, '<id>'), self.Rule(True, ':='), self.Rule(False, 'expr')],
-            [self.Rule(True, 'read'), self.Rule(True, '<id>')],
-            [self.Rule(True, 'write'), self.Rule(False, 'expr')],
-            [self.Rule(True, 'if'), self.Rule(False, 'cond'),
-             self.Rule(False, 'stmt_list'), self.Rule(True, 'end')],
-            [self.Rule(True, 'while'), self.Rule(False, 'cond'),
-             self.Rule(False, 'stmt_list'), self.Rule(True, 'end')],
-            [self.Rule(False, 'expr'), self.Rule(False, 'ro'), self.Rule(False, 'expr')],
-            [self.Rule(False, 'term'), self.Rule(False, 'term_tail')],
-            [self.Rule(False, 'ao'), self.Rule(False, 'term'), self.Rule(False, 'term_tail')],
-            [],
-            [self.Rule(False, 'factor'), self.Rule(False, 'factor_tail')],
-            [self.Rule(False, 'mo'), self.Rule(False, 'factor'), self.Rule(False, 'factor_tail')],
-            [],
-            [self.Rule(True, '<i_lit>')], [self.Rule(True, '<id>')],
-            [self.Rule(True, '('), self.Rule(False, 'expr'), self.Rule(True, ')')],
-            [self.Rule(True, '=')], [self.Rule(True, '<>')], [self.Rule(True, '<')],
-            [self.Rule(True, '<=')], [self.Rule(True, '>')], [self.Rule(True, '>=')],
-            [self.Rule(True, '+')], [self.Rule(True, '-')],
-            [self.Rule(True, '*')], [self.Rule(True, '/')]
-        ]
+        self.rule_list = self.grammar.rule_names_list
+        self.token_list = self.grammar.tokens_list
+        self.table = []
+        for _ in self.rule_list:
+            self.table.append([-1] * len(self.token_list))
+        self.productions_list = [[self.Rule(False, self.rule_list[0])]]
+        for i, rule, predict_set in zip(itertools.count(1), self.grammar.rules, self.compute_predict_sets()):
+            for token in predict_set:
+                self.table[self.rule_list.index(rule.name)][self.token_list.index(token)] = i
+            self.productions_list.append(
+                [] if rule.productions[0].name == '' else
+                [self.Rule(production.terminal, production.name) for production in rule.productions]
+            )
 
     def step(self) -> None:
         self.reset_highlighted_line()
