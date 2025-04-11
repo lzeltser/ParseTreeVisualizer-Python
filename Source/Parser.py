@@ -178,19 +178,9 @@ class LL1Parser(UsesGrammar):
                 new_set.remove('')
                 new_set = list(set(new_set + follow_sets[rule.name]))
             predict_sets.append(new_set)
-
-        # in case I need to test the sets
-        """
-        def write_dict(d: dict):
-            for k, v in d.items():
-                print(f'{k} : {v}')
-        print('------------------  First sets:  ------------------')
-        write_dict(first_sets)
-        print('\n\n\n------------------  Follow sets:  ------------------')
-        write_dict(follow_sets)
-        print('\n\n\n------------------  Predict sets:  ------------------')
-        for rule, predict_set in zip(self.grammar.rules, predict_sets):
-            print(f'{rule.make_formatted_str(0)} :      {predict_set}')
-        """
+        if '' in predict_sets[0]:
+            predict_sets[0].remove('')
+        if 'eof' not in predict_sets[0]:
+            predict_sets[0].append('eof')
 
         return predict_sets

@@ -213,7 +213,7 @@ class Grammar:
                     current_token += code[counter]
                     counter += 1
                 token_stream.append(self.Token(current_token) if current_token in self.tokens_list
-                                    else self.Token('<id>', current_token))
+                                    else self.Token('id', current_token))
                 current_token = ''
             elif code[counter].isdigit():
                 while counter < code_length and code[counter].isdigit():
@@ -221,7 +221,7 @@ class Grammar:
                     counter += 1
                 if counter < code_length and code[counter].isalpha():
                     raise self.LexingException(f"Invalid token: '{current_token + code[counter]}'.")
-                token_stream.append(self.Token('<i_lit>', current_token))
+                token_stream.append(self.Token('i_lit', current_token))
                 current_token = ''
             else:
                 potential_tokens = get_potential_tokens(self.tokens_list, current_token)
@@ -238,5 +238,5 @@ class Grammar:
                         token_stream.append(self.Token(current_token))
                         current_token = ''
                         break
-        token_stream.append(self.Token('<eof>'))
+        token_stream.append(self.Token('eof'))
         return token_stream
