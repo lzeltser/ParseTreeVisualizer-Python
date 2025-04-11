@@ -65,11 +65,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         for language in self.parsers[0].languages:
             self.RDCodeSelectBox.addItem(language.name)
-        with open("../Grammars/Calculator-LL.gr", 'r') as f:
+        with open("../Grammars/ExtendedCalculator-LL.gr", 'r') as f:
             self.parsers[0].input_grammar(f.read())
-        with open("../Grammars/Calculator-LL.gr", 'r') as f:
+        with open("../Grammars/ExtendedCalculator-LL.gr", 'r') as f:
             self.parsers[1].input_grammar(f.read())
-        with open("../Grammars/Calculator-LR.gr", 'r') as f:
+        with open("../Grammars/SimpleCalculator-LR.gr", 'r') as f:
             self.parsers[2].input_grammar(f.read())
 
         # Initialize grammar, code, and other class variables
