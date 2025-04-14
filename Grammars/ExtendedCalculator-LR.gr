@@ -4,7 +4,7 @@
 <cond>        ::= <expr> <rel_op> <expr>
 <expr>      ::= <term> | <expr> <add_op> <term>
 <term>      ::= <factor> | <term> <mult_op> <factor>
-<factor>    ::= "(" <expr> ")" | "id" | "i_lit"
+<factor>    ::= "(" <expr> ")" | "id" | "number"
 <rel_op>      ::= "=" | "<>" | "<" | ">" | "<=" | ">="
 <add_op>    ::= "+" | "-"
 <mult_op>   ::= "*" | "/"

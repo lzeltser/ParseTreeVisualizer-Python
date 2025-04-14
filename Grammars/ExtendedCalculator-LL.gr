@@ -6,7 +6,7 @@
 <term_tail>   ::= <add_op> <term> <term_tail> | ""
 <term>        ::= <factor> <factor_tail>
 <factor_tail> ::= <mult_op> <factor> <factor_tail> | ""
-<factor>      ::= "(" <expr> ")" | "id" | "i_lit"
+<factor>      ::= "(" <expr> ")" | "id" | "number"
 <rel_op>      ::= "=" | "<>" | "<" | ">" | "<=" | ">="
 <add_op>      ::= "+" | "-"
 <mult_op>     ::= "*" | "/"

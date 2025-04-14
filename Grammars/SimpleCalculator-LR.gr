@@ -3,6 +3,6 @@
 <stmt>      ::= <id> ":=" <expr> | "read" <id> | "write" <expr>
 <expr>      ::= <term> | <expr> <add_op> <term>
 <term>      ::= <factor> | <term> <mult_op> <factor>
-<factor>    ::= "(" <expr> ")" | "id" | "i_lit"
+<factor>    ::= "(" <expr> ")" | "id" | "number"
 <add_op>    ::= "+" | "-"
 <mult_op>   ::= "*" | "/"
