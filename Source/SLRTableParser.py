@@ -152,11 +152,13 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
                     if len(new_set) > 0 and new_set not in closures:
                         closures.append(new_set)
 
-        # for i, state in enumerate(closures):
-        #     print(f'State {i}:')
-        #     for item_ in state:
-        #         print(item_.make_formatted_str())
-        #     print('----------------------------------------------------------------')
+        singleton_indices: list[int] = []
+        for i, state in enumerate(closures):
+            if len(state) == 1 and state[0].dot_position >= len(state[0].productions):
+                singleton_indices.append(i)
+        singleton_states: list[LRItem] = []
+        for i in singleton_indices[::-1]:
+            singleton_states.append(closures.pop(i).pop())
 
         follow_sets: dict[str, list[str]] = self.grammar.generate_follow_sets()
         if '' in follow_sets[self.grammar.start_symbol]:
@@ -171,13 +173,19 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
             self.table.append([blank_entry] * len(self.symbol_list))
             for item in state:
                 if item.dot_position < len(item.productions):
-                    self.table[-1][self.symbol_list.index(item.productions[item.dot_position].name)] =\
-                        self.TableEntry(self.Actions.Shift, closures.index(goto(state, item.productions[item.dot_position].name, lr_items)))
+                    goto_ = goto(state, item.productions[item.dot_position].name, lr_items)
+                    if goto_ in closures:
+                        self.table[-1][self.symbol_list.index(item.productions[item.dot_position].name)] =\
+                            self.TableEntry(self.Actions.Shift, closures.index(goto_))
+                    else:
+                        self.table[-1][self.symbol_list.index(item.productions[item.dot_position].name)] = \
+                            self.TableEntry(self.Actions.ShiftReduce, find_rule_index(goto_[0]) + 1)
+
             for item in state:
                 if item.dot_position >= len(item.productions):
                     for symbol in follow_sets[item.name]:
-                        if self.table[-1][self.symbol_list.index(symbol)] is blank_entry:
-                            pass  # TODO: shift-reduce conflict
+                        if self.table[-1][self.symbol_list.index(symbol)] is not blank_entry:
+                            print("shift reduce conflict")
                         self.table[-1][self.symbol_list.index(symbol)] = self.TableEntry(
                             self.Actions.Reduce, find_rule_index(item) + 1
                         )
