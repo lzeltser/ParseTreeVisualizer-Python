@@ -1,8 +1,8 @@
-<program>   ::= <stmt_list> <eof>
+<program>   ::= <stmt_list> "eof"
 <stmt_list> ::= <stmt_list> <stmt> | <stmt>
 <stmt>      ::= <id> ":=" <expr> | "read" <id> | "write" <expr>
-<expr>      ::= <term> | <expr> <ao> <term>
-<term>      ::= <factor> | <term> <mo> <factor>
-<factor>    ::= "(" <expr> ")" | <id> | <i_lit>
-<ao>        ::= "+" | "-"
-<mo>        ::= "*" | "/"
+<expr>      ::= <term> | <expr> <add_op> <term>
+<term>      ::= <factor> | <term> <mult_op> <factor>
+<factor>    ::= "(" <expr> ")" | "id" | "i_lit"
+<add_op>    ::= "+" | "-"
+<mult_op>   ::= "*" | "/"

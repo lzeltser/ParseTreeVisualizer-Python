@@ -76,7 +76,7 @@ class LL1TableParser(Parser, UsesTable, WritesGrammar, LL1Parser):
         for _ in self.rule_list:
             self.table.append([-1] * len(self.token_list))
         self.productions_list = [[self.Rule(False, self.rule_list[0])]]
-        for i, rule, predict_set in zip(itertools.count(1), self.grammar.rules, self.make_predict_sets()):
+        for i, rule, predict_set in zip(itertools.count(1), self.grammar.rules, self.generate_predict_sets()):
             for token in predict_set:
                 self.table[self.rule_list.index(rule.name)][self.token_list.index(token)] = i
             self.productions_list.append(

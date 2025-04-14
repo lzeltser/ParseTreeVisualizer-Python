@@ -182,6 +182,8 @@ class Grammar:
             self.tokens_list.remove('eof')
             self.tokens_list.append('eof')
 
+        self.start_symbol: str = self.rule_names_list[0]
+
     def __len__(self):
         return len(self.rules)
 
@@ -196,6 +198,55 @@ class Grammar:
     @property
     def rule_names_list(self) -> list[str]:
         return list(dict.fromkeys([rule.name for rule in self.rules]))
+
+    def generate_first_sets(self) -> dict[str, list[str]]:
+        first_sets: dict[str, list[str]] = {}
+        for rule_name in self.rule_names_list:
+            first_sets[rule_name] = []
+        for token in self.tokens_list:
+            first_sets[token] = [token]
+        for rule in self.rules:
+            if rule.productions[0].terminal:
+                first_sets[rule.name].append(rule.productions[0].name)
+        made_progress: bool = True
+        while made_progress:
+            made_progress = False
+            for rule in self.rules:
+                if rule.productions[0].terminal:
+                    continue
+                first_len = len(first_sets[rule.name])
+                first_sets[rule.name] = list(set(first_sets[rule.name] + first_sets[rule.productions[0].name]))
+                made_progress = made_progress or len(first_sets[rule.name]) > first_len
+        if '' in first_sets[self.start_symbol]:
+            first_sets[self.start_symbol].remove('')
+        if 'eof' not in first_sets[self.start_symbol]:
+            first_sets[self.start_symbol].append('eof')
+        first_sets[''] = ['']
+        return first_sets
+
+    def generate_follow_sets(self) -> dict[str, list[str]]:
+        first_sets: dict[str, list[str]] = self.generate_first_sets()
+        follow_sets: dict[str, list[str]] = {}
+        for key in first_sets:
+            follow_sets[key] = []
+        follow_sets[self.start_symbol].append('')
+        made_progress: bool = True
+        while made_progress:
+            made_progress = False
+            for rule in self.rules:
+                for i, production in enumerate(rule.productions):
+                    if production.name == '':
+                        continue
+                    first_len = len(follow_sets[production.name])
+                    if i + 1 < len(rule.productions):
+                        new_set = [c for c in first_sets[rule.productions[i+1].name]]
+                        if '' in new_set:
+                            new_set.remove('')
+                        follow_sets[production.name] = list(set(follow_sets[production.name] + new_set))
+                    if i == len(rule.productions)-1 or '' in first_sets[rule.productions[i+1].name]:
+                        follow_sets[production.name] = list(set(follow_sets[production.name] + follow_sets[rule.name]))
+                    made_progress = made_progress or len(follow_sets[production.name]) > first_len
+        return follow_sets
 
     def lexer(self, code: str) -> list[Token]:
         # TODO: make state machine

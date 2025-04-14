@@ -124,54 +124,11 @@ class WritesGrammar(UsesGrammar):
 
 
 class LL1Parser(UsesGrammar):
-    def make_predict_sets(self) -> list[list[str]]:
-        start_symbol = self.grammar.rule_names_list[0]
-
-        first_sets: dict[str, list[str]] = {}
-        for rule_name in self.grammar.rule_names_list:
-            first_sets[rule_name] = []
-        for token in self.grammar.tokens_list:
-            first_sets[token] = [token]
-        for rule in self.grammar.rules:
-            if rule.productions[0].terminal:
-                first_sets[rule.name].append(rule.productions[0].name)
-        made_progress: bool = True
-        while made_progress:
-            made_progress = False
-            for rule in self.grammar.rules:
-                if rule.productions[0].terminal:
-                    continue
-                first_len = len(first_sets[rule.name])
-                first_sets[rule.name] = list(set(first_sets[rule.name] + first_sets[rule.productions[0].name]))
-                made_progress = made_progress or len(first_sets[rule.name]) > first_len
-        if '' in first_sets[start_symbol]:
-            first_sets[start_symbol].remove('')
-        if 'eof' not in first_sets[start_symbol]:
-            first_sets[start_symbol].append('eof')
-        first_sets[''] = ['']
-
-        follow_sets: dict[str, list[str]] = {}
-        for key in first_sets:
-            follow_sets[key] = []
-        follow_sets[start_symbol].append('')
-        made_progress: bool = True
-        while made_progress:
-            made_progress = False
-            for rule in self.grammar.rules:
-                for i, production in enumerate(rule.productions):
-                    if production.name == '':
-                        continue
-                    first_len = len(follow_sets[production.name])
-                    if i + 1 < len(rule.productions):
-                        new_set = [c for c in first_sets[rule.productions[i+1].name]]
-                        if '' in new_set:
-                            new_set.remove('')
-                        follow_sets[production.name] = list(set(follow_sets[production.name] + new_set))
-                    if i == len(rule.productions)-1 or '' in first_sets[rule.productions[i+1].name]:
-                        follow_sets[production.name] = list(set(follow_sets[production.name] + follow_sets[rule.name]))
-                    made_progress = made_progress or len(follow_sets[production.name]) > first_len
-
+    def generate_predict_sets(self) -> list[list[str]]:
+        first_sets: dict[str, list[str]] = self.grammar.generate_first_sets()
+        follow_sets: dict[str, list[str]] = self.grammar.generate_follow_sets()
         predict_sets: list[list[str]] = []
+
         for rule in self.grammar.rules:
             new_set: list[str] = [symbol for symbol in first_sets[rule.productions[0].name]]
             if '' in new_set:

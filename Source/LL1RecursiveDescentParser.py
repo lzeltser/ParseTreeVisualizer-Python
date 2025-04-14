@@ -225,7 +225,7 @@ class LL1RecursiveDescentParser(Parser, LL1Parser):
         for entry in self.rules:
             self.rules[entry] = []
 
-        for rule, predict_set in zip(self.grammar.rules, self.make_predict_sets()):
+        for rule, predict_set in zip(self.grammar.rules, self.generate_predict_sets()):
             actions = []
             for production in rule.productions:
                 if production.name != '':

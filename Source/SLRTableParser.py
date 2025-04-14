@@ -87,76 +87,110 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         return ' '.join(map(lambda x: f"{x.node.name} {x.state}", self.parse_stack))
 
     def generate_rules(self) -> None:
-        self.symbol_list = ['stmt_list', 'stmt', 'expr', 'term', 'factor', 'ao', 'mo', 'id',
-                               'i_lit', 'read', 'write', ':=', '(', ')', '+', '-', '*', '/', 'eof']
-        be = self.TableEntry(self.Actions.Nothing, -1)  # blank entry
-        self.table = [
-            [self.TableEntry(self.Actions.Shift, 2), self.TableEntry(self.Actions.ShiftReduce, 3), be, be, be, be,
-             be, self.TableEntry(self.Actions.Shift, 3), be, self.TableEntry(self.Actions.Shift, 1),
-             self.TableEntry(self.Actions.Shift, 4), be, be, be, be, be, be, be, be],
-            [be, be, be, be, be, be, be, self.TableEntry(self.Actions.ShiftReduce, 5), be, be, be, be, be, be, be, be,
-             be, be, be],
-            [be, self.TableEntry(self.Actions.ShiftReduce, 2), be, be, be, be, be,
-             self.TableEntry(self.Actions.Shift, 3), be, self.TableEntry(self.Actions.Shift, 1),
-             self.TableEntry(self.Actions.Shift, 4), be, be, be, be, be, be, be,
-             self.TableEntry(self.Actions.ShiftReduce, 1)],
-            [be, be, be, be, be, be, be, be, be, be, be, self.TableEntry(self.Actions.Shift, 5),
-             be, be, be, be, be, be, be],
-            [be, be, self.TableEntry(self.Actions.Shift, 6), self.TableEntry(self.Actions.Shift, 7),
-             self.TableEntry(self.Actions.ShiftReduce, 9), be, be, self.TableEntry(self.Actions.ShiftReduce, 12),
-             self.TableEntry(self.Actions.ShiftReduce, 13), be, be, be, self.TableEntry(self.Actions.Shift, 8),
-             be, be, be, be, be, be],
-            [be, be, self.TableEntry(self.Actions.Shift, 9), self.TableEntry(self.Actions.Shift, 7), self.TableEntry(self.Actions.ShiftReduce, 9), be, be,
-             self.TableEntry(self.Actions.ShiftReduce, 12), self.TableEntry(self.Actions.ShiftReduce, 13), be, be, be, self.TableEntry(self.Actions.Shift, 8),
-             be, be, be, be, be, be],
-            [be, be, be, be, be, self.TableEntry(self.Actions.Shift, 10), be,
-             self.TableEntry(self.Actions.Reduce, 6), be, self.TableEntry(self.Actions.Reduce, 6),
-             self.TableEntry(self.Actions.Reduce, 6), be, be, be, self.TableEntry(self.Actions.ShiftReduce, 14),
-             self.TableEntry(self.Actions.ShiftReduce, 15), be, be, self.TableEntry(self.Actions.Reduce, 6)],
-            [be, be, be, be, be, be, self.TableEntry(self.Actions.Shift, 11),
-             self.TableEntry(self.Actions.Reduce, 7), be, self.TableEntry(self.Actions.Reduce, 7),
-             self.TableEntry(self.Actions.Reduce, 7), be, be, self.TableEntry(self.Actions.Reduce, 7),
-             self.TableEntry(self.Actions.Reduce, 7), self.TableEntry(self.Actions.Reduce, 7),
-             self.TableEntry(self.Actions.ShiftReduce, 16), self.TableEntry(self.Actions.ShiftReduce, 17),
-             self.TableEntry(self.Actions.Reduce, 7)],
-            [be, be, self.TableEntry(self.Actions.Shift, 12), self.TableEntry(self.Actions.Shift, 7),
-             self.TableEntry(self.Actions.ShiftReduce, 9), be, be, self.TableEntry(self.Actions.ShiftReduce, 12),
-             self.TableEntry(self.Actions.ShiftReduce, 13), be, be, be, self.TableEntry(self.Actions.Shift, 8),
-             be, be, be, be, be, be],
-            [be, be, be, be, be, self.TableEntry(self.Actions.Shift, 10), be,
-             self.TableEntry(self.Actions.Reduce, 4), be, self.TableEntry(self.Actions.Reduce, 4),
-             self.TableEntry(self.Actions.Reduce, 4), be, be, be, self.TableEntry(self.Actions.ShiftReduce, 14),
-             self.TableEntry(self.Actions.ShiftReduce, 15), be, be, self.TableEntry(self.Actions.Reduce, 4)],
-            [be, be, be, self.TableEntry(self.Actions.Shift, 13), self.TableEntry(self.Actions.ShiftReduce, 9),
-             be, be, self.TableEntry(self.Actions.ShiftReduce, 12), self.TableEntry(self.Actions.ShiftReduce, 13),
-             be, be, be, self.TableEntry(self.Actions.Shift, 8), be, be, be, be, be, be],
-            [be, be, be, be, self.TableEntry(self.Actions.ShiftReduce, 10), be, be,
-             self.TableEntry(self.Actions.ShiftReduce, 12), self.TableEntry(self.Actions.ShiftReduce, 13),
-             be, be, be, self.TableEntry(self.Actions.Shift, 8), be, be, be, be, be, be],
-            [be, be, be, be, be, self.TableEntry(self.Actions.Shift, 10), be, be, be, be, be, be, be,
-             self.TableEntry(self.Actions.ShiftReduce, 11), self.TableEntry(self.Actions.ShiftReduce, 14),
-             self.TableEntry(self.Actions.ShiftReduce, 15), be, be, be],
-            [be, be, be, be, be, be, self.TableEntry(self.Actions.Shift, 11),
-             self.TableEntry(self.Actions.Reduce, 8), be, self.TableEntry(self.Actions.Reduce, 8),
-             self.TableEntry(self.Actions.Reduce, 8), be, be, self.TableEntry(self.Actions.Reduce, 8),
-             self.TableEntry(self.Actions.Reduce, 8), self.TableEntry(self.Actions.Reduce, 8),
-             self.TableEntry(self.Actions.ShiftReduce, 16), self.TableEntry(self.Actions.ShiftReduce, 17),
-             self.TableEntry(self.Actions.Reduce, 8)]
-        ]
-        self.production_list = [
-            None, self.Production('program', 2), self.Production('stmt_list', 2),
-            self.Production('stmt_list', 1), self.Production('stmt', 3), self.Production('stmt', 2),
-            self.Production('stmt', 2), self.Production('expr', 1), self.Production('expr', 3),
-            self.Production('term', 1), self.Production('term', 3), self.Production('factor', 3),
-            self.Production('factor', 1), self.Production('factor', 1), self.Production('ao', 1),
-            self.Production('ao', 1), self.Production('mo', 1), self.Production('mo', 1)
-        ]
+        self.symbol_list = self.grammar.rule_names_list + self.grammar.tokens_list
+
+        class LRProduction:
+            def __init__(self, name: str, terminal: bool) -> None:
+                self.name: str = name
+                self.terminal: bool = terminal
+
+            def __eq__(self, other: LRProduction) -> bool:
+                return self.name == other.name and self.terminal == other.terminal
+
+            def __str__(self) -> str:
+                return f'"{self.name.replace('\n', '\\n')}"' if self.terminal else f'<{self.name}>'
+
+        class LRItem:
+            def __init__(self, name: str, productions: list[LRProduction], dot_position: int) -> None:
+                self.name: str = name
+                self.productions: list[LRProduction] = productions
+                self.dot_position: int = dot_position
+
+            def __eq__(self, other: LRItem) -> bool:
+                return self.name == other.name and self.productions == other.productions and self.dot_position == other.dot_position
+
+            def make_formatted_str(self) -> str:
+                prods = list(map(str, self.productions))
+                prods.insert(self.dot_position, '•') if self.dot_position < len(prods) else prods.append('•')
+                return '<' + self.name + '> ::= ' + ' '.join(prods)
+
+        def closure(items_list: list[LRItem], all_lr_items: list[LRItem]) -> list[LRItem]:
+            list_length: int = 0
+            while len(items_list) != list_length:
+                list_length = len(items_list)
+                for item_ in items_list:
+                    if item_.dot_position < len(item_.productions):
+                        for lr_item in all_lr_items:
+                            if lr_item.name == item_.productions[item_.dot_position].name and lr_item.dot_position == 0 and lr_item not in items_list:
+                                items_list.append(lr_item)
+            return items_list
+
+        def goto(items: list[LRItem], symbol_: str, all_lr_items: list[LRItem]) -> list[LRItem]:
+            new_items: list[LRItem] = []
+            for item_ in items:
+                if item_.dot_position < len(item_.productions) and item_.productions[item_.dot_position].name == symbol_:
+                    new_items.append(LRItem(item_.name, item_.productions, item_.dot_position+1))
+            return closure(new_items, all_lr_items)
+
+        def find_rule_index(lr_item_: LRItem) -> int:
+            for ri, rule_ in enumerate(self.grammar.rules):
+                if [p.name for p in rule_.productions] == [lri.name for lri in lr_item_.productions]:
+                    return ri
+
+        lr_items: list[LRItem] = []
+        for rule in self.grammar.rules:
+            for i in range(len(rule.productions) + 1):
+                lr_items.append(LRItem(rule.name, [LRProduction(p.name, p.terminal) for p in rule.productions], i))
+
+        closures: list[list[LRItem]] = [closure([lr_items[0]], lr_items)]
+        current_states: int = 0
+        while len(closures) != current_states:
+            current_states = len(closures)
+            for state in closures:
+                for symbol in self.symbol_list:
+                    new_set: list[LRItem] = goto(state, symbol, lr_items)
+                    if len(new_set) > 0 and new_set not in closures:
+                        closures.append(new_set)
+
+        # for i, state in enumerate(closures):
+        #     print(f'State {i}:')
+        #     for item_ in state:
+        #         print(item_.make_formatted_str())
+        #     print('----------------------------------------------------------------')
+
+        follow_sets: dict[str, list[str]] = self.grammar.generate_follow_sets()
+        if '' in follow_sets[self.grammar.start_symbol]:
+            follow_sets[self.grammar.start_symbol].remove('')
+        if 'eof' not in follow_sets[self.grammar.start_symbol]:
+            follow_sets[self.grammar.start_symbol].append('eof')
+
+        self.symbol_list.remove(self.grammar.start_symbol)
+        blank_entry = self.TableEntry(self.Actions.Nothing, -1)
+        self.table = []
+        for state in closures:
+            self.table.append([blank_entry] * len(self.symbol_list))
+            for item in state:
+                if item.dot_position < len(item.productions):
+                    self.table[-1][self.symbol_list.index(item.productions[item.dot_position].name)] =\
+                        self.TableEntry(self.Actions.Shift, closures.index(goto(state, item.productions[item.dot_position].name, lr_items)))
+            for item in state:
+                if item.dot_position >= len(item.productions):
+                    for symbol in follow_sets[item.name]:
+                        if self.table[-1][self.symbol_list.index(symbol)] is blank_entry:
+                            pass  # TODO: shift-reduce conflict
+                        self.table[-1][self.symbol_list.index(symbol)] = self.TableEntry(
+                            self.Actions.Reduce, find_rule_index(item) + 1
+                        )
+
+        self.production_list = []
+        for rule in self.grammar.rules:
+            self.production_list.append(self.Production(rule.name, len(rule.productions)))
 
     def step(self) -> None:
         self.reset_highlighted_line()
         if not self.parse_stack:
             self.start_parse()
-        elif self.token_stream[0].name == self.production_list[1].name and self.parse_stack[-1].state == 0:
+        elif (not self.token_stream or self.token_stream[0].name == self.production_list[0].name) and self.parse_stack[-1].state == 0:
             self.finish_parse()
         else:
             self.do_action()
@@ -171,7 +205,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         return self.parse_stack[-1].state
 
     def next_col(self) -> int:
-        return self.symbol_list.index(self.token_stream[0].name)
+        return self.symbol_list.index(self.token_stream[0].name if self.token_stream else self.parse_stack[-1].symbol)
 
     def next_rule(self) -> SLRTableParser.TableEntry:
         return self.table[self.next_row()][self.next_col()]
@@ -203,7 +237,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
     def reduce(self, rule_target: int) -> None:
         self.set_scroll_bar_to_line(rule_target)
         self.set_highlighted_line(rule_target)
-        production = self.production_list[rule_target]
+        production = self.production_list[rule_target-1]
         self.token_stream.insert(0, self.grammar.Token(production.name))
         self.tree_is_first_in_token_stream = True
         popped_nodes: list[Tree] = []
@@ -217,7 +251,7 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
         self.set_scroll_bar_to_line(rule_target)
         self.set_highlighted_line(rule_target)
         self.token_stream.pop(0)
-        production = self.production_list[rule_target]
+        production = self.production_list[rule_target-1]
         self.token_stream.insert(0, self.grammar.Token(production.name))
         popped_nodes: list[Tree] = []
         for _ in range(production.right_side_len - 1):
