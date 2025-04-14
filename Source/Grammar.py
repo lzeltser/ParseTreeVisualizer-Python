@@ -275,8 +275,26 @@ class Grammar:
                     counter += 1
                 if counter < code_length and code[counter].isalpha():
                     raise self.LexingException(f"Invalid token: '{current_token + code[counter]}'.")
-                token_stream.append(self.Token('i_lit', current_token))
+                token_stream.append(self.Token('number', current_token))
                 current_token = ''
+            elif code[counter] == '"':
+                current_token += code[counter]
+                counter += 1
+                while counter < code_length:
+                    if code[counter] == '\\' and counter < len(code)-1:
+                        current_token += code[counter]
+                        counter += 1
+                        current_token += code[counter]
+                        counter += 1
+                    elif code[counter] == '"':
+                        current_token += code[counter]
+                        counter += 1
+                        token_stream.append(self.Token('string', current_token))
+                        current_token = ''
+                        break
+                    else:
+                        current_token += code[counter]
+                        counter += 1
             else:
                 potential_tokens = get_potential_tokens(self.tokens_list, current_token)
                 while counter < code_length and \
@@ -292,5 +310,7 @@ class Grammar:
                         token_stream.append(self.Token(current_token))
                         current_token = ''
                         break
+        if current_token != '':
+            token_stream.append(self.Token(current_token))
         token_stream.append(self.Token('eof'))
         return token_stream
