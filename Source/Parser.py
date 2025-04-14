@@ -140,4 +140,13 @@ class LL1Parser(UsesGrammar):
         if 'eof' not in predict_sets[0]:
             predict_sets[0].append('eof')
 
+        check: dict[str, list[str]] = dict.fromkeys(self.grammar.rule_names_list)
+        for thing in check.keys():
+            check[thing] = []
+        for rule, predict in zip(self.grammar.rules, predict_sets):
+            check[rule.name] += predict
+        for k, v in check.items():
+            if len(set(v)) < len(v):
+                print(f"Predict set for {k} is not disjoint.")
+
         return predict_sets
