@@ -69,7 +69,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.parsers[0].input_grammar(f.read())
         with open("../Grammars/ExtendedCalculator-LL.gr", 'r') as f:
             self.parsers[1].input_grammar(f.read())
-        with open("../Grammars/SimpleCalculator-LR.gr", 'r') as f:
+        with open("../Grammars/ExtendedCalculator-LR.gr", 'r') as f:
             self.parsers[2].input_grammar(f.read())
 
         # Initialize grammar, code, and other class variables
