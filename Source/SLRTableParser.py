@@ -185,7 +185,8 @@ class SLRTableParser(Parser, UsesTable, WritesGrammar):
                 if item.dot_position >= len(item.productions):
                     for symbol in follow_sets[item.name]:
                         if self.table[-1][self.symbol_list.index(symbol)] is not blank_entry:
-                            print("shift reduce conflict")
+                            print("shift reduce conflict in state:")
+                            print('\n'.join(map(lambda j: j.make_formatted_str(), state)))
                         self.table[-1][self.symbol_list.index(symbol)] = self.TableEntry(
                             self.Actions.Reduce, find_rule_index(item) + 1
                         )
