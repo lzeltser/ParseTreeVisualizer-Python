@@ -148,5 +148,8 @@ class LL1Parser(UsesGrammar):
         for k, v in check.items():
             if len(set(v)) < len(v):
                 print(f"Predict set for {k} is not disjoint.")
+                for rule, predict in zip(self.grammar.rules, predict_sets):
+                    if rule.name == k:
+                        print(f"{predict} -> {rule.make_formatted_str(0)}")
 
         return predict_sets
