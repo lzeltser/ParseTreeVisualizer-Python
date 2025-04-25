@@ -1,10 +1,10 @@
 <program>     ::= <stmt_list> "eof"
 <stmt_list>   ::= <stmt> <stmt_list> | ""
-<stmt>        ::= "id" ":=" <expr> | "read" "id" | "write" <expr>
+<stmt>        ::= "identifier" ":=" <expr> | "read" "identifier" | "write" <expr>
 <expr>        ::= <term> <term_tail>
 <term_tail>   ::= <add_op> <term> <term_tail> | ""
 <term>        ::= <factor> <factor_tail>
 <factor_tail> ::= <mult_op> <factor> <factor_tail> | ""
-<factor>      ::= "(" <expr> ")" | "id" | "number"
+<factor>      ::= "(" <expr> ")" | "identifier" | "number"
 <add_op>      ::= "+" | "-"
 <mult_op>     ::= "*" | "/"

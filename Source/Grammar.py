@@ -267,7 +267,7 @@ class Grammar:
                     current_token += code[counter]
                     counter += 1
                 token_stream.append(self.Token(current_token) if current_token in self.tokens_list
-                                    else self.Token('id', current_token))
+                                    else self.Token('identifier', current_token))
                 current_token = ''
             elif code[counter].isdigit():
                 while counter < code_length and code[counter].isdigit():
@@ -289,7 +289,7 @@ class Grammar:
                     elif code[counter] == '"':
                         current_token += code[counter]
                         counter += 1
-                        token_stream.append(self.Token('string', current_token))
+                        token_stream.append(self.Token('string_lit', current_token))
                         current_token = ''
                         break
                     else:
@@ -307,7 +307,7 @@ class Grammar:
                     raise self.LexingException(f"Chars in single quotes can only have one character.")
                 current_token += code[counter]
                 counter += 1
-                token_stream.append(self.Token('char', current_token))
+                token_stream.append(self.Token('char_lit', current_token))
                 current_token = ''
             else:
                 potential_tokens = get_potential_tokens(self.tokens_list, current_token)

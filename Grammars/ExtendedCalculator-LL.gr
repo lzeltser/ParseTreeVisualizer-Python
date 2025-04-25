@@ -1,12 +1,12 @@
 <program>     ::= <stmt_list> "eof"
 <stmt_list>   ::= <stmt> <stmt_list> | ""
-<stmt>        ::= "id" ":=" <expr> | "read" "id" | "write" <expr> | "if" <cond> <stmt_list> "end" | "while" <cond> <stmt_list> "end"
+<stmt>        ::= "identifier" ":=" <expr> | "read" "identifier" | "write" <expr> | "if" <cond> <stmt_list> "end" | "while" <cond> <stmt_list> "end"
 <cond>        ::= <expr> <rel_op> <expr>
 <expr>        ::= <term> <term_tail>
 <term_tail>   ::= <add_op> <term> <term_tail> | ""
 <term>        ::= <factor> <factor_tail>
 <factor_tail> ::= <mult_op> <factor> <factor_tail> | ""
-<factor>      ::= "(" <expr> ")" | "id" | "number"
+<factor>      ::= "(" <expr> ")" | "identifier" | "number_lit"
 <rel_op>      ::= "=" | "<>" | "<" | ">" | "<=" | ">="
 <add_op>      ::= "+" | "-"
 <mult_op>     ::= "*" | "/"
