@@ -275,7 +275,7 @@ class Grammar:
                     counter += 1
                 if counter < code_length and code[counter].isalpha():
                     raise self.LexingException(f"Invalid token: '{current_token + code[counter]}'.")
-                token_stream.append(self.Token('number', current_token))
+                token_stream.append(self.Token('number_lit', current_token))
                 current_token = ''
             elif code[counter] == '"':
                 current_token += code[counter]
