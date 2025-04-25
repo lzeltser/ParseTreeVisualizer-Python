@@ -295,6 +295,20 @@ class Grammar:
                     else:
                         current_token += code[counter]
                         counter += 1
+            elif code[counter] == "'":
+                current_token += code[counter]
+                counter += 1
+                if code[counter] == '\\':
+                    current_token += code[counter]
+                    counter += 1
+                current_token += code[counter]
+                counter += 1
+                if code[counter] != "'":
+                    raise self.LexingException(f"Chars in single quotes can only have one character.")
+                current_token += code[counter]
+                counter += 1
+                token_stream.append(self.Token('char', current_token))
+                current_token = ''
             else:
                 potential_tokens = get_potential_tokens(self.tokens_list, current_token)
                 while counter < code_length and \
