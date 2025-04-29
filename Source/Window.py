@@ -73,7 +73,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.parsers[2].input_grammar(f.read())
 
         # Initialize grammar, code, and other class variables
-        with open("../ExampleCode/Average.cl", "r") as f:
+        with open("../ExampleCode/SumAverage.cl", "r") as f:
             self.code: str = f.read()
         self.current_parser: Parser = self.parsers[self.AlgorithmBox.currentIndex()]
         self.current_parser.input_code(self.code)
