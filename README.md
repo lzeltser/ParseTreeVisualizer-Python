@@ -28,8 +28,6 @@ tested on this version and on a Windows 10 machine.
 This project is a work in progress. The following are features I
 intend to add:
 * Clean up the code
-* Create three parser generators, allowing users to input a grammar for
-a programming language and a tree will be built from it
 * Add functionality to the menu bar
 * Add tooltips
 * Allow the tree to be exported as an image file
@@ -39,6 +37,7 @@ a programming language and a tree will be built from it
 * Add more languages for the recursive descent code (in no particular
 order, Ada, C#, D, Go, Java, JavaScript, Haskell, OCaml, Ruby, Rust)
 and make them set by config files rather than hard coded
+* Add more grammars (B-Minor and PL/0 are currently a work-in-progress)
 
 ## Contact
 For any questions about the project, you can email me at
