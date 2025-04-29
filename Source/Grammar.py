@@ -33,6 +33,9 @@ class Grammar:
             self.name: str = name
             self.productions: list[Grammar.Production] = [] if rules is None else rules
 
+        def is_epsilon(self) -> bool:
+            return len(self.productions) == 1 and self.productions[0].name == ''
+
         def make_formatted_str(self, longest_rule_len: int) -> str:
             return '<' + self.name + '>' + ' ' * (longest_rule_len - len(self.name)) + ' ::= ' + ' '.join(map(str, self.productions))
 
@@ -51,7 +54,7 @@ class Grammar:
         pass
 
     def __init__(self, description: str) -> None:
-        self.description: str = description.lower().strip()
+        self.description: str = description.strip()
         self.rules: list[Grammar.Rule] = []
         self.tokens_list: list[str] = []
 
@@ -200,32 +203,56 @@ class Grammar:
         return list(dict.fromkeys([rule.name for rule in self.rules]))
 
     def generate_first_sets(self) -> dict[str, list[str]]:
-        first_sets: dict[str, list[str]] = {}
+        def remove_epsilon(l: list) -> list:
+            new_l: list = [i for i in l]
+            if '' in new_l:
+                new_l.remove('')
+            return new_l
+
+        first_sets: dict[str, list[str]] = {'': ['']}
         for rule_name in self.rule_names_list:
             first_sets[rule_name] = []
         for token in self.tokens_list:
             first_sets[token] = [token]
         for rule in self.rules:
-            if rule.productions[0].terminal:
-                first_sets[rule.name].append(rule.productions[0].name)
+            if rule.is_epsilon() and len(first_sets[rule.name]) < 1:
+                first_sets[rule.name].append('')
+
         made_progress: bool = True
         while made_progress:
             made_progress = False
             for rule in self.rules:
-                if rule.productions[0].terminal:
-                    continue
                 first_len = len(first_sets[rule.name])
-                first_sets[rule.name] = list(set(first_sets[rule.name] + first_sets[rule.productions[0].name]))
+                for production in rule.productions:
+                    first_sets[rule.name] = list(set(first_sets[rule.name] + remove_epsilon(first_sets[production.name])))
+                    if '' not in first_sets[production.name]:
+                        break
+
+                e_in_all_productions: bool = True
+                for production in rule.productions:
+                    if '' not in first_sets[production.name]:
+                        e_in_all_productions = False
+                        break
+                if e_in_all_productions and '' not in first_sets[rule.name]:
+                    first_sets[rule.name].append('')
+
                 made_progress = made_progress or len(first_sets[rule.name]) > first_len
+
         if '' in first_sets[self.start_symbol]:
             first_sets[self.start_symbol].remove('')
         if 'eof' not in first_sets[self.start_symbol]:
             first_sets[self.start_symbol].append('eof')
-        first_sets[''] = ['']
+
         return first_sets
 
-    def generate_follow_sets(self) -> dict[str, list[str]]:
-        first_sets: dict[str, list[str]] = self.generate_first_sets()
+    def generate_follow_sets(self, first_sets: dict[str, list[str]] = None) -> dict[str, list[str]]:
+        def remove_epsilon(l: list) -> list:
+            new_l: list = [i for i in l]
+            if '' in new_l:
+                new_l.remove('')
+            return new_l
+
+        first_sets: dict[str, list[str]] = self.generate_first_sets() if first_sets is None else first_sets
         follow_sets: dict[str, list[str]] = {}
         for key in first_sets:
             follow_sets[key] = []
@@ -235,17 +262,17 @@ class Grammar:
             made_progress = False
             for rule in self.rules:
                 for i, production in enumerate(rule.productions):
-                    if production.name == '':
-                        continue
                     first_len = len(follow_sets[production.name])
                     if i + 1 < len(rule.productions):
-                        new_set = [c for c in first_sets[rule.productions[i+1].name]]
-                        if '' in new_set:
-                            new_set.remove('')
-                        follow_sets[production.name] = list(set(follow_sets[production.name] + new_set))
+                        follow_sets[production.name] = list(set(follow_sets[production.name] + remove_epsilon(first_sets[rule.productions[i+1].name])))
+                    made_progress = made_progress or len(follow_sets[production.name]) > first_len
+
+                for i, production in enumerate(rule.productions):
+                    first_len = len(follow_sets[production.name])
                     if i == len(rule.productions)-1 or '' in first_sets[rule.productions[i+1].name]:
                         follow_sets[production.name] = list(set(follow_sets[production.name] + follow_sets[rule.name]))
                     made_progress = made_progress or len(follow_sets[production.name]) > first_len
+
         return follow_sets
 
     def lexer(self, code: str) -> list[Token]:

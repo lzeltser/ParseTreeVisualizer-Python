@@ -126,7 +126,7 @@ class WritesGrammar(UsesGrammar):
 class LL1Parser(UsesGrammar):
     def generate_predict_sets(self) -> list[list[str]]:
         first_sets: dict[str, list[str]] = self.grammar.generate_first_sets()
-        follow_sets: dict[str, list[str]] = self.grammar.generate_follow_sets()
+        follow_sets: dict[str, list[str]] = self.grammar.generate_follow_sets(first_sets)
         predict_sets: list[list[str]] = []
 
         for rule in self.grammar.rules:
