@@ -1,0 +1,28 @@
+<program>         ::= <block> "." "eof"
+<block>           ::= <const_list> <var_list> <proc_list> <stmt>
+<const_list>      ::= "CONST" <const_expr> <const_list_tail> ";" | ""
+<const_expr>      ::= "identifier" "=" "number_lit"
+<const_list_tail> ::= "," <const_expr> <const_list_tail> | ""
+<var_list>        ::= "VAR" <var_expr> <var_list_tail> ";" | ""
+<var_expr>        ::= "identifier"
+<var_list_tail>   ::= "," <var_expr> <var_list_tail> | ""
+<proc_list>       ::= <proc_expr> <proc_list> | ""
+<proc_expr>       ::= "PROCEDURE" "identifier" ";" <block> ";"
+<stmt>            ::= <assign_stmt> | <call_stmt> | <read_stmt> | <write_stmt> | <subroutine_stmt> | <if_stmt> | <loop_stmt> | ""
+<assign_stmt>     ::= "identifier" ":=" <expr>
+<call_stmt>       ::= "CALL" "identifier"
+<read_stmt>       ::= "READ" "identifier"
+<write_stmt>      ::= "WRITE" <expr>
+<subroutine_stmt> ::= "BEGIN" <stmt_list> "END"
+<if_stmt>         ::= "IF" <cond> "THEN" <stmt>
+<loop_stmt>       ::= "WHILE" <cond> "DO" <stmt>
+<stmt_list>       ::= <stmt> ";" <stmt_list> | ""
+<cond>            ::= "odd" <expr> | <expr> <rel_op> <expr>
+<expr>            ::= <term> <term_tail>
+<term_tail>       ::= <add_op> <term> <term_tail> | ""
+<term>            ::= <factor> <factor_tail>
+<factor_tail>     ::= <mult_op> <factor> <factor_tail> | ""
+<factor>          ::= "(" <expr> ")" | "identifier" | "number_lit"
+<rel_op>          ::= "=" | "#" | "<" | "<=" | ">" | ">="
+<add_op>          ::= "+" | "-"
+<mult_op>         ::= "*" | "/"

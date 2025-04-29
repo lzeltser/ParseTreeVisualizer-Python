@@ -1,0 +1,75 @@
+<program>                  ::= <global_stmt_list> "eof"
+<global_stmt_list>         ::= <global_stmt> <global_stmt_list> | ""
+<global_stmt>              ::= "identifier" <id_stmt_tail>
+<stmt_list>                ::= <stmt> <stmt_list> | ""
+<stmt>                     ::= <block_stmt> | <if_stmt> | <id_stmt> | <loop_stmt> | <ret_stmt> | <print_stmt>
+<block_stmt>               ::= "{" <stmt_list> "}"
+<if_stmt>                  ::= "if" "(" <expr> ")" <stmt> "else" <stmt> ; solving the dangling else problem by requiring every if to have an else
+<expr_stmt>                ::= "=" <expr> ";"
+<expr>                     ::= <assign_expr> <assign_expr_tail>
+<assign_expr_tail>         ::= "=" <assign_expr> <assign_expr_tail> | ""
+<assign_expr>              ::= <or_expr> <or_expr_tail>
+<or_expr_tail>             ::= "||" <or_expr> <or_expr_tail> | ""
+<or_expr>                  ::= <and_expr> <and_expr_tail>
+<and_expr_tail>            ::= "&&" <and_expr> <and_expr_tail> | ""
+<and_expr>                 ::= <rel_expr> <rel_expr_tail>
+<rel_expr_tail>            ::= <rel_op> <rel_expr> <rel_expr_tail> | ""
+<rel_expr>                 ::= <add_expr> <add_expr_tail>
+<rel_op>                   ::= "<" | "<=" | ">" | ">=" | "==" | "!="
+<add_expr_tail>            ::= <add_op> <add_expr> <add_expr_tail> | ""
+<add_expr>                 ::= <mul_expr> <mul_expr_tail>
+<add_op>                   ::= "+" | "-"
+<mul_expr_tail>            ::= <mult_op> <mul_expr> <mul_expr_tail> | ""
+<mul_expr>                 ::= <exp_expr> <exp_expr_tail>
+<mult_op>                  ::= "*" | "/" | "%"
+<exp_expr_tail>            ::= "^" <exp_expr> <exp_expr_tail> | ""
+<exp_expr>                 ::= <unary_expr> <unary_expr_tail>
+
+<unary_expr_tail>          ::= <unary_expr> <unary_expr_tail> | <postfix_expr> <postfix_expr_tail>
+<unary_expr>               ::= "-" | "!" | ""
+<unary_op>                 ::= "-" | "!"
+
+<postfix_expr_tail>        ::= <postfix_op> <postfix_expr_tail> | ""
+<postfix_expr>             ::= <primary_expr> <postfix_expr_tail>
+<postfix_op>               ::= "++" | "--"
+
+<primary_expr>             ::= "identifier" <primary_id_expr> | "number_lit" | "true" | "false" | "char_lit" | "string_lit" | "(" <expr> ")"
+<primary_id_expr>          ::= "" | <subscript_expr_list> | "(" <param_list> ")"
+<subscript_expr_list>      ::= <subscript_expr> <subscript_expr_list_tail>
+<subscript_expr>           ::= "[" <expr> "]"
+<subscript_expr_list_tail> ::= <subscript_expr> <subscript_expr_list_tail> | ""
+<type>                     ::= "void" | "integer" | "char" | "string" | "boolean" | "auto"
+<loop_stmt>                ::= <for_loop> | <while_loop>
+<for_loop>                 ::= "for" "(" <for_loop_param> ";" <for_loop_param> ";" <for_loop_param> ")" <stmt>
+<for_loop_param>           ::= <expr> | ""
+<while_loop>               ::= "while" "(" <expr> ")" <stmt>
+<id_stmt>                  ::= "identifier" <id_stmt_tail>
+<id_stmt_tail>             ::= <decl_stmt> | <expr_stmt>
+<decl_stmt>                ::= ":" <decl_stmt_tail>
+<decl_stmt_tail>           ::= <var_stmt> | <func_stmt>
+<var_stmt>                 ::= <var_decl_expr> <var_stmt_tail>
+<var_stmt_tail>            ::= <var_decl_stmt> | <var_init_stmt>
+<var_decl_stmt>            ::= ";"
+<var_init_stmt>            ::= "=" <var_init_expr> ";"
+<var_init_expr>            ::= <expr> | <array>
+<var_decl_expr>            ::= <array_spec> <type>
+<array_spec>               ::= "array" "[" "number_lit" "]" <array_spec_tail> | ""
+<array_spec_tail>          ::= "[" "number_lit" "]" <array_spec_tail> | ""
+<func_stmt>                ::= <func_decl_expr> <func_stmt_tail>
+<func_stmt_tail>           ::= <func_decl_stmt> | <func_def_stmt>
+<func_decl_expr>           ::= "function" <type> "(" <formal_param_list> ")"
+<func_decl_stmt>           ::= ";"
+<func_def_stmt>            ::= "=" <block_stmt>
+<formal_param_list>        ::= <formal_param> <formal_param_list_tail> | ""
+<formal_param_list_tail>   ::= "," <formal_param> <formal_param_list_tail> | ""
+<formal_param>             ::= "identifier" ":" <formal_array_spec> <type>
+<formal_array_spec>        ::= "array" "[" "]" <formal_array_spec_tail> | ""
+<formal_array_spec_tail>   ::= "[" "]" <formal_array_spec_tail> | ""
+<ret_stmt>                 ::= "return" <optional_expr> ";"
+<optional_expr>            ::= <expr> | ""
+<param_list>               ::= <expr> <param_list_tail> | ""
+<param_list_tail>          ::= "," <expr> <param_list_tail> | ""
+<print_stmt>               ::= "print" <expr_list> ";"
+<expr_list>                ::= <expr> <expr_list_tail>
+<expr_list_tail>           ::= "," <expr_list> | ""
+<array>                    ::= "{" <expr_list> "}"

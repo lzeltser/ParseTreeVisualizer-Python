@@ -1,0 +1,6 @@
+main: function void (max: integer) = {
+    i: integer;
+    for (i=0;i<max;i++) {
+        print i;
+    }
+}

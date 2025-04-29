@@ -1,0 +1,46 @@
+<program>                  ::= <global_statement_list> "eof"
+<global_statement_list>    ::= <global_statement> <global_statement_list> | ""
+<global_statement>         ::= <decl_statement> | <init_statement> | <func_decl_statement> | <func_def_statement>
+<statement_list>           ::= <statement> <statement_list> | ""
+<statement>                ::= <block_statement> | <if_statement> | <expr_statement> | <loop_statement> | <decl_statement> | <init_statement> | <func_decl_statement> | <func_def_statement> | <ret_statement> | <print_statement>
+<block_statement>          ::= "{" <statement_list> "}"
+<if_statement>             ::= "if" "(" <expr> ")" <statement> | "if" "(" <expr> ")" <statement> "else" <statement>
+<expr_statement>           ::= <expr> ";"
+<expr>                     ::= <assign_expr>
+<assign_expr>              ::= <assign_expr> "=" <or_expr> | <or_expr>
+<or_expr>                  ::= <or_expr> "||" <and_expr> | <and_expr>
+<and_expr>                 ::= <and_expr> "&&" <rel_expr> | <rel_expr>
+<rel_expr>                 ::= <rel_expr> "<" <add_expr> | <rel_expr> "<=" <add_expr> | <rel_expr> ">" <add_expr> | <rel_expr> ">=" <add_expr> | <rel_expr> "=" <add_expr> | <rel_expr> "!=" <add_expr> | <add_expr>
+<add_expr>                 ::= <add_expr> "+" <mul_expr> | <add_expr> "-" <mul_expr> | <mul_expr>
+<mul_expr>                 ::= <mul_expr> "*" <exp_expr> | <mul_expr> "/" <exp_expr> | <mul_expr> "%" <exp_expr> | <exp_expr>
+<exp_expr>                 ::= <exp_expr> "^" <unary_expr> | <unary_expr>
+<unary_expr>               ::= "-" <unary_expr> | "!" <unary_expr> | <postfix_expr>
+<postfix_expr>             ::= <postfix_expr> "++" | <postfix_expr> "--" | <primary_expr>
+<primary_expr>             ::= "id" | "number" | "true" | "false" | "char" | "string" | "(" <expr> ")" | "id" <subscript_expr_list> | "id" "(" <param_list> ")" | <array>
+<subscript_expr_list>      ::= <subscript_expr> <subscript_expr_list_tail>
+<subscript_expr>           ::= "[" <expr> "]"
+<subscript_expr_list_tail> ::= <subscript_expr> <subscript_expr_list_tail> | ""
+<type>                     ::= "void" | "integer" | "char" | "string" | "boolean" | "auto"
+<loop_statement>           ::= <for_loop> | <while_loop>
+<for_loop>                 ::= "for" "(" <for_loop_param> ";" <for_loop_param> ";" <for_loop_param> ")" <statement>
+<for_loop_param>           ::= <expr> | ""
+<while_loop>               ::= "while" "(" <expr> ")" <statement>
+<decl_statement>           ::= <decl_expr> ";"
+<decl_expr>                ::= "id" ":" <array_spec> <type>
+<array_spec>               ::= "array" "[" "number" "]" <array_spec> | ""
+<init_statement>           ::= <init_expr> ";"
+<init_expr>                ::= <decl_expr> "=" <expr>
+<func_decl_expr>           ::= "id" ":" "function" <type> "(" <formal_param_list> ")"
+<func_decl_statement>      ::= <func_decl_expr> ";"
+<func_def_statement>       ::= <func_decl_expr> "=" <block_statement>
+<formal_param_list>        ::= <formal_param> <formal_param_list_tail> | ""
+<formal_param_list_tail>   ::= "," <formal_param> <formal_param_list_tail> | ""
+<formal_param>             ::= "id" ":" <formal_array_spec> <type>
+<formal_array_spec>        ::= "array" "[" "]" <formal_array_spec> | ""
+<ret_statement>            ::= "return" <expr> ";" | "return" ";"
+<param_list>               ::= <expr> <param_list_tail> | ""
+<param_list_tail>          ::= "," <expr> <param_list_tail> | ""
+<print_statement>          ::= "print" <expr_list> ";" | "print" ";"
+<expr_list>                ::= <expr> <expr_list_tail>
+<expr_list_tail>           ::= "," <expr_list> | ""
+<array>                    ::= "{" <expr_list> "}"

@@ -1,0 +1,4 @@
+main: function void (a: integer, b: integer) = {
+    sum: integer = a+b;
+    print sum, sum/2;
+}
