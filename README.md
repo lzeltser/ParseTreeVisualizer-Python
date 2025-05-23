@@ -49,10 +49,11 @@ leonzeltser at gmail dot com.
 * Committee Member - Dr. Matteo Cimini
 
 Parse Tree Visualizer is a port of a Java applet made by Dr. Zerksis
-D. Umrigar.
+D. Umrigar and ported to later versions of Java by David Bacon and
+Victoria Munroe mentored by Dr. Charles Thomas Wilkes.
 
 ## License
-Parse Tree Visualizer is open source and licensed under the GNU General
-Public License version 3.
+Parse Tree Visualizer is open source and is licensed under the GNU
+General Public License version 3.
 
 Copyright (C) 2024-2025 Leon Zeltser
